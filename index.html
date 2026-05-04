@@ -857,7 +857,7 @@ async function generateSchema(){
   btn.textContent='...';btn.disabled=true;
 
   // Simple prompt - NO detail field to avoid JSON parse errors
-  const sysprompt = "Je bent een loopcoach. Geef altijd alleen valide JSON terug. Geen uitleg, geen markdown, geen code blocks. Geen speciale tekens of aanhalingstekens binnen tekstwaarden.";
+  const sysprompt = "Je bent een loopcoach. Geef uitsluitend valide JSON terug. Absoluut geen uitleg of markdown. VERBODEN in tekstwaarden: apostrofs, aanhalingstekens, backslashes. Gebruik alleen gewone letters, cijfers, spaties, punten, kommas en koppeltekens in tekstwaarden.";
   const currentDist=profile.currentDist||10;
 const weekOneMax=Math.round(currentDist*1.1);
 const totalWeeks=profile.weeks||12;
@@ -886,12 +886,19 @@ Regels:
     
     let jsonStr = res.substring(start, end+1);
     
-    // Clean up common issues
+    // Robust JSON cleaning
     jsonStr = jsonStr
-      .replace(/,(\s*[}\]])/g, '$1')  // trailing commas
-      .replace(/[‘’]/g, "'") // smart quotes
-      .replace(/[“”]/g, '"') // smart double quotes
-      .replace(/	/g, ' ');            // tabs
+      .replace(/,(\s*[}\]])/g, '$1')
+      .replace(/[\u2018\u2019\u2032]/g, '')
+      .replace(/[\u201c\u201d]/g, '"')
+      .replace(/\t/g, ' ')
+      .replace(/\r/g, '');
+    // Fix unescaped apostrophes inside string values
+    // Parse field by field to find and fix broken values
+    try { JSON.parse(jsonStr); } catch(firstErr) {
+      // Try replacing single quotes inside values with escaped version
+      jsonStr = jsonStr.replace(/([a-zA-Z])'([a-zA-Z])/g, "$1$2");
+    }
 
     let raw;
     try {

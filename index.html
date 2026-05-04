@@ -240,6 +240,7 @@ textarea{overflow:hidden}
         <div style="display:flex;gap:6px">
           <button class="day-btn" id="export-schema-btn" style="border-color:var(--accent2);color:var(--accent2)">⬇ Garmin</button>
           <button class="day-btn" id="edit-schema-btn" style="border-color:var(--accent3);color:var(--accent3)">✏️</button>
+          <button class="day-btn" id="delete-schema-btn" style="border-color:var(--danger);color:var(--danger)">🗑</button>
           <button class="day-btn" id="generate-schema-btn" style="border-color:var(--accent);color:var(--accent)">⟳ Genereer</button>
         </div>
       </div>
@@ -701,6 +702,16 @@ function logFeeling(feel,btn){
   switchTo('coach');addBubble('user',msgs[feel]);askCoach(msgs[feel]);
 }
 
+document.getElementById('delete-schema-btn')?.addEventListener('click',()=>{
+  if(!schema){alert('Geen schema om te verwijderen.');return;}
+  if(!confirm('Schema verwijderen? Je trainingslog blijft bewaard.'))return;
+  schema=null;
+  localStorage.removeItem('rc_schema');
+  syncToCloud();
+  document.getElementById('schema-list').innerHTML='<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">Druk op Genereer voor je persoonlijk schema</div>';
+  document.getElementById('streak-card').style.display='none';
+  renderToday();
+});
 document.getElementById('export-schema-btn')?.addEventListener('click',()=>{
   if(!schema){alert('Genereer eerst een schema.');return;}
   exportWeekToGarmin(currentWeek);

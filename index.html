@@ -920,39 +920,6 @@ Regels: type alleen run bike rest. Omschrijving max 35 tekens. Geen apostrofs. G
 }
 
 
-    let raw;
-    try {
-      raw = JSON.parse(jsonStr);
-    } catch(e) {
-      console.error('JSON parse error:', e.message); console.error('Raw JSON (first 500):', jsonStr.substring(0,500)); throw new Error('Parse fout: ' + e.message + ' (zie console voor details)');
-    }
-
-    if(!Array.isArray(raw) || raw.length === 0) throw new Error('Ongeldig schema ontvangen.');
-    W=profile.weeks||12;
-
-    // Normalize to consistent structure
-    schema = raw.map((wk, i) => ({
-      week: i + 1,
-      focus: String(wk.focus || wk.doel || `Week ${i+1}`).substring(0, 60),
-      km_totaal: Number(wk.km || wk.km_totaal || 0),
-      dagen: (wk.dagen || []).map(d => ({
-        dag: String(d.dag || '?').substring(0, 2),
-        type: ['run','bike','rest'].includes(d.type) ? d.type : 'rest',
-        beschrijving: String(d.omschrijving || d.beschrijving || d.type || '').substring(0, 60),
-        detail: buildDetail(d)
-      }))
-    }));
-
-    localStorage.setItem('rc_schema', JSON.stringify(schema));
-    renderSchema();
-    renderToday();
-  } catch(e) {
-    alert('Fout: ' + e.message);
-  }
-  btn.textContent='⟳ Genereer';btn.disabled=false;
-}
-
-
 function renderSchema(){
   document.getElementById('week-label').textContent=`Week ${currentWeek} van ${WEEKS}`;
   if(!schema)return;

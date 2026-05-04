@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="theme-color" content="#0f1117">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>RunCoach</title>
+<link rel="manifest" href="manifest.json">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
+:root{--bg:#0f1117;--surface:#181c27;--surface2:#1e2333;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.16);--text:#f0f0f0;--muted:#7a8099;--accent:#c8f060;--accent2:#5be3a0;--accent3:#60c8f0;--danger:#f06060;--warn:#f0a860;--radius:14px;--radius-sm:8px}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;padding-bottom:88px}
+button,input,textarea,select{font-family:inherit}
+#setup-screen{min-height:100vh;display:flex;flex-direction:column;padding:40px 24px}
+.setup-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:30px;color:var(--accent);margin-bottom:4px}
+.setup-sub{font-size:14px;color:var(--muted);margin-bottom:28px;line-height:1.5}
+.setup-section{margin-bottom:20px}
+.setup-label{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;margin-bottom:8px;display:block}
+.setup-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.setup-options.three{grid-template-columns:1fr 1fr 1fr}
+.opt-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--muted);padding:11px 8px;font-size:13px;cursor:pointer;text-align:center;transition:all .15s;line-height:1.3}
+.opt-btn.active{background:rgba(200,240,96,.12);border-color:var(--accent);color:var(--accent)}
+.setup-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:11px 14px;font-size:14px;outline:none}
+.setup-input:focus{border-color:var(--accent)}
+.setup-row{display:flex;gap:8px}
+.setup-row .setup-input{flex:1}
+.api-note{background:rgba(200,240,96,.06);border:1px solid rgba(200,240,96,.2);border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:22px}
+.api-note a,.api-note strong{color:var(--accent);text-decoration:none}
+.start-btn{width:100%;background:var(--accent);color:#0f1117;border:none;border-radius:var(--radius);padding:16px;font-family:'Syne',sans-serif;font-weight:700;font-size:16px;cursor:pointer;margin-top:auto}
+.start-btn:active{opacity:.85}
+#app{display:none}
+.topbar{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:13px 18px 10px;display:flex;align-items:center;justify-content:space-between}
+.topbar-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--accent)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-date{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--bg);border-top:1px solid var(--border);display:flex;z-index:100;padding:6px 0 10px}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;cursor:pointer;border:none;background:none;color:var(--muted);font-size:9px;transition:color .15s}
+.nav-item.active{color:var(--accent)}
+.nav-icon{font-size:19px;line-height:1}
+.page{display:none;padding:14px}
+.page.active{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.card-title{font-family:'Syne',sans-serif;font-weight:600;font-size:14px}
+.tag{font-family:'DM Mono',monospace;font-size:10px;padding:3px 8px;border-radius:20px;letter-spacing:.04em;display:inline-block}
+.tag-run{background:rgba(200,240,96,.12);color:var(--accent)}
+.tag-bike{background:rgba(96,200,240,.12);color:var(--accent3)}
+.tag-rest{background:rgba(122,128,153,.15);color:var(--muted)}
+.tag-done{background:rgba(91,227,160,.12);color:var(--accent2)}
+.tag-cross{background:rgba(240,168,96,.12);color:var(--warn)}
+.tag-swim{background:rgba(96,150,240,.12);color:#60a0f0}
+.tag-walk{background:rgba(180,130,240,.12);color:#c090f0}
+.today-hero{background:linear-gradient(135deg,rgba(200,240,96,.08) 0%,rgba(91,227,160,.04) 100%);border:1px solid rgba(200,240,96,.2);border-radius:var(--radius);padding:18px;margin-bottom:12px}
+.today-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--accent);text-transform:uppercase;margin-bottom:6px}
+.today-workout{font-family:'Syne',sans-serif;font-weight:700;font-size:20px;line-height:1.2;margin-bottom:6px}
+.today-detail{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px}
+.today-actions{display:flex;gap:8px}
+.today-btn{flex:1;padding:11px;border-radius:var(--radius-sm);border:none;font-family:'Syne',sans-serif;font-weight:600;font-size:13px;cursor:pointer}
+.today-btn:active{opacity:.8}
+.today-btn-primary{background:var(--accent);color:#0f1117}
+.today-btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
+.day-row{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer}
+.day-row:last-child{border-bottom:none}
+.day-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.dot-run{background:var(--accent)}.dot-bike{background:var(--accent3)}.dot-rest{background:var(--muted)}.dot-done{background:var(--accent2)}.dot-cross{background:var(--warn)}.dot-swim{background:#60a0f0}.dot-walk{background:#c090f0}
+.day-info{flex:1;min-width:0}
+.day-name{font-size:13px;font-weight:500;margin-bottom:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.day-desc{font-size:12px;color:var(--muted);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.day-actions{display:flex;gap:6px;flex-shrink:0}
+.day-btn{font-size:11px;padding:5px 11px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
+.day-btn.done-btn{border-color:var(--accent2);color:var(--accent2)}
+.day-btn:active{opacity:.7}
+.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.stat-box{background:var(--surface2);border-radius:var(--radius-sm);padding:10px;text-align:center}
+.stat-val{font-family:'DM Mono',monospace;font-size:18px;font-weight:500;line-height:1.2}
+.stat-lbl{font-size:10px;color:var(--muted);margin-top:2px}
+.prog-bar{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;margin:8px 0 14px}
+.prog-fill{height:100%;border-radius:2px;background:var(--accent);transition:width .6s ease}
+.week-switcher{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.week-arrow{background:var(--surface);border:1px solid var(--border);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:18px;flex-shrink:0}
+.week-arrow:active{border-color:var(--accent)}
+.week-label{flex:1;text-align:center;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)}
+.recovery-row{display:flex;gap:8px;margin-bottom:14px}
+.rec-btn{flex:1;padding:10px 4px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;cursor:pointer;text-align:center;transition:all .15s;line-height:1.4}
+.rec-icon{font-size:18px;display:block;margin-bottom:3px}
+.rec-btn.active-great{background:rgba(200,240,96,.15);border-color:var(--accent);color:var(--accent)}
+.rec-btn.active-ok{background:rgba(91,227,160,.12);border-color:var(--accent2);color:var(--accent2)}
+.rec-btn.active-tired{background:rgba(240,168,96,.12);border-color:var(--warn);color:var(--warn)}
+.rec-btn.active-bad{background:rgba(240,96,96,.12);border-color:var(--danger);color:var(--danger)}
+.chat-area{min-height:240px;max-height:44vh;overflow-y:auto;padding:4px 0;margin-bottom:10px;scroll-behavior:smooth}
+.bubble{margin-bottom:9px;max-width:88%;line-height:1.55;font-size:13px}
+.bubble-ai{background:var(--surface2);border-radius:4px 14px 14px 14px;padding:10px 14px;border:1px solid var(--border)}
+.bubble-user{margin-left:auto;background:rgba(200,240,96,.1);border:1px solid rgba(200,240,96,.22);border-radius:14px 4px 14px 14px;padding:10px 14px}
+.bubble-typing{background:var(--surface2);border-radius:4px 14px 14px 14px;padding:10px 14px;border:1px solid var(--border);color:var(--muted);font-style:italic;font-size:12px}
+.chat-input-row{display:flex;gap:8px;align-items:flex-end}
+.chat-input{flex:1;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);padding:10px 13px;font-size:13px;resize:none;min-height:40px;max-height:100px;outline:none;line-height:1.4}
+.chat-input:focus{border-color:var(--accent)}
+.send-btn{background:var(--accent);color:#0f1117;border:none;border-radius:var(--radius-sm);width:40px;height:40px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.send-btn:active{opacity:.8}
+.quick-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.quick-btn{font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
+.quick-btn:active{border-color:var(--accent);color:var(--accent)}
+.meal-block{margin-bottom:14px}
+.meal-title{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px}
+.food-item{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
+.food-item:last-child{border-bottom:none}
+.food-kcal{color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;flex-shrink:0;margin-left:8px}
+.upload-area{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:26px 16px;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:12px}
+.upload-area:active{border-color:var(--accent)}
+.upload-icon{font-size:26px;margin-bottom:7px}
+.upload-text{font-size:13px;color:var(--muted);line-height:1.5}
+#file-input{display:none}
+.act-item{display:flex;gap:12px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--border)}
+.act-item:last-child{border-bottom:none}
+.act-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.act-info{flex:1;min-width:0}
+.act-name{font-size:13px;font-weight:500;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.act-meta{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
+.strava-connect-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:var(--radius-sm);border:none;background:#fc4c02;color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;cursor:pointer;margin-bottom:10px}
+.strava-connect-btn:active{opacity:.85}
+.strava-connected{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(252,76,2,.08);border:1px solid rgba(252,76,2,.25);border-radius:var(--radius-sm);font-size:13px;margin-bottom:10px}
+.connect-input-group{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
+.chart-wrap{position:relative;height:155px;margin:4px 0}
+.badge{display:inline-flex;align-items:center;font-size:11px;padding:3px 9px;border-radius:20px;font-family:'DM Mono',monospace}
+.badge-green{background:rgba(91,227,160,.12);color:var(--accent2)}
+.badge-yellow{background:rgba(200,240,96,.12);color:var(--accent)}
+.badge-blue{background:rgba(96,200,240,.12);color:var(--accent3)}
+.badge-orange{background:rgba(252,76,2,.12);color:#fc6030}
+.section-hdr{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius) var(--radius) 0 0;border:1px solid var(--border);padding:20px;width:100%;max-width:430px;max-height:85vh;overflow-y:auto}
+.modal-title{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.modal-close{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:0;line-height:1}
+.modal-input{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);padding:10px 13px;font-size:13px;resize:none;outline:none;margin-bottom:10px;min-height:80px;line-height:1.5}
+.modal-input:focus{border-color:var(--accent)}
+.modal-btn{width:100%;background:var(--accent);color:#0f1117;border:none;border-radius:var(--radius-sm);padding:13px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;cursor:pointer}
+.modal-btn:active{opacity:.85}
+.modal-btn-out{width:100%;background:transparent;color:var(--muted);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:11px;font-size:13px;cursor:pointer;margin-top:8px}
+.modal-detail{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;padding:12px;background:var(--surface2);border-radius:var(--radius-sm)}
+.info-box{background:rgba(96,200,240,.05);border:1px solid rgba(96,200,240,.18);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:10px}
+.info-box a{color:var(--accent3);text-decoration:none}
+.info-box strong{color:var(--text)}
+.loading-dots span{display:inline-block;animation:blink 1.2s infinite}
+.loading-dots span:nth-child(2){animation-delay:.2s}
+.loading-dots span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+.streak-row{display:flex;gap:5px;margin:6px 0 14px;flex-wrap:wrap}
+.streak-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-family:'DM Mono',monospace;flex-shrink:0}
+.streak-done{background:rgba(200,240,96,.2);color:var(--accent);border:1px solid rgba(200,240,96,.4)}
+.streak-miss{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
+.streak-future{background:transparent;color:var(--muted);border:1px dashed var(--border)}
+.streak-today{border:1.5px solid var(--accent3) !important}
+.edit-row{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.edit-row:last-child{border-bottom:none}
+.edit-day-label{font-size:13px;font-weight:500;width:28px;flex-shrink:0}
+.edit-select{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 8px;font-size:12px;outline:none}
+.edit-desc{flex:2;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 8px;font-size:12px;outline:none}
+textarea{overflow:hidden}
+</style>
+</head>
+<body>
+
+<div id="setup-screen">
+  <div class="setup-logo">RunCoach</div>
+  <div class="setup-sub">Jouw persoonlijke hardloop- en fietscoach — gebouwd op AI</div>
+  <div class="api-note">🔑 Vereist een <strong>Anthropic API key</strong> via <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>. Alles blijft lokaal in je browser.</div>
+  <div class="setup-section"><label class="setup-label">Anthropic API Key</label><input class="setup-input" type="password" id="setup-api" placeholder="sk-ant-api03-..."></div>
+  <div class="setup-section"><label class="setup-label">Jouw naam</label><input class="setup-input" type="text" id="setup-name" placeholder="Naam"></div>
+
+  <div class="setup-section"><label class="setup-label">Niveau</label><div class="setup-options three"><button class="opt-btn active" data-group="run-level" data-val="beginner">Beginner</button><button class="opt-btn" data-group="run-level" data-val="gevorderd">Gevorderd</button><button class="opt-btn" data-group="run-level" data-val="ervaren">Ervaren</button></div></div>
+  <div class="setup-section"><label class="setup-label">Doel</label><div class="setup-options"><button class="opt-btn active" data-group="goal" data-val="5km opbouwen">5km opbouwen</button><button class="opt-btn" data-group="goal" data-val="10km lopen">10km lopen</button><button class="opt-btn" data-group="goal" data-val="halve marathon">Halve marathon</button><button class="opt-btn" data-group="goal" data-val="fitter worden">Fitter worden</button></div></div>
+  <div class="setup-section"><label class="setup-label">Fietsen meenemen?</label><div class="setup-options"><button class="opt-btn active" data-group="cycling" data-val="ja">Ja, fietsen ook</button><button class="opt-btn" data-group="cycling" data-val="nee">Nee, alleen lopen</button></div></div>
+  <div class="setup-section"><label class="setup-label">Trainingsdagen/week</label><div class="setup-options three"><button class="opt-btn" data-group="days" data-val="3">3×</button><button class="opt-btn active" data-group="days" data-val="4">4×</button><button class="opt-btn" data-group="days" data-val="5">5×</button></div></div>
+  <div class="setup-section"><label class="setup-label">Gewicht & lengte</label><div class="setup-row"><input class="setup-input" type="number" id="setup-weight" placeholder="kg"><input class="setup-input" type="number" id="setup-height" placeholder="cm"></div></div>
+  <button class="start-btn" id="start-btn">Start met trainen →</button>
+</div>
+
+<div id="app">
+  <div class="topbar">
+    <div class="topbar-logo">RunCoach</div>
+    <div class="topbar-right"><div class="topbar-date" id="topbar-date"></div><span class="badge badge-yellow" id="streak-badge" style="display:none"></span></div>
+  </div>
+
+  <div id="page-today" class="page active">
+    <div id="today-hero-wrap"></div>
+    <div class="section-hdr">Week voortgang</div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-val" id="stat-km">—</div><div class="stat-lbl">km gepland</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-done">0/0</div><div class="stat-lbl">sessies</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-streak">0</div><div class="stat-lbl">streak 🔥</div></div>
+    </div>
+    <div class="prog-bar"><div class="prog-fill" id="week-prog" style="width:0%"></div></div>
+    <div class="section-hdr">Hoe voel je je?</div>
+    <div class="recovery-row">
+      <button class="rec-btn" data-feel="great" onclick="logFeeling('great',this)"><span class="rec-icon">💪</span>Top</button>
+      <button class="rec-btn" data-feel="ok" onclick="logFeeling('ok',this)"><span class="rec-icon">😊</span>Goed</button>
+      <button class="rec-btn" data-feel="tired" onclick="logFeeling('tired',this)"><span class="rec-icon">😴</span>Moe</button>
+      <button class="rec-btn" data-feel="bad" onclick="logFeeling('bad',this)"><span class="rec-icon">🤕</span>Ziek</button>
+    </div>
+    <div class="section-hdr">Week <span id="week-nr-today">1</span> — alle trainingen</div>
+    <div class="card" style="padding:0 14px"><div id="today-week-list" style="padding:2px 0"></div></div>
+  </div>
+
+  <div id="page-schema" class="page">
+    <div class="week-switcher">
+      <button class="week-arrow" id="prev-week">‹</button>
+      <div class="week-label" id="week-label">Week 1 van 8</div>
+      <button class="week-arrow" id="next-week">›</button>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">Trainingsschema</div>
+        <div style="display:flex;gap:6px">
+          <button class="day-btn" id="edit-schema-btn" style="border-color:var(--accent3);color:var(--accent3)">✏️</button>
+          <button class="day-btn" id="generate-schema-btn" style="border-color:var(--accent);color:var(--accent)">⟳ Genereer</button>
+        </div>
+      </div>
+      <div id="schema-list"><div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">Druk op Genereer voor je persoonlijk schema</div></div>
+    </div>
+    <div class="card" id="streak-card" style="display:none">
+      <div class="card-header"><div class="card-title">Voortgang week</div><span class="badge badge-yellow" id="streak-pct">0%</span></div>
+      <div class="streak-row" id="streak-dots"></div>
+    </div>
+  </div>
+
+  <div id="page-stats" class="page">
+    <div class="section-hdr">Jouw voortgang</div>
+    <div class="card"><div class="card-header"><div class="card-title">Kilometers per week</div><span class="badge badge-yellow" id="total-km-badge">—</span></div><div class="chart-wrap"><canvas id="chart-km"></canvas></div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Completie %</div><span class="badge badge-blue" id="avg-comp-badge">—</span></div><div class="chart-wrap"><canvas id="chart-sessions"></canvas></div></div>
+    <div class="card"><div class="card-header"><div class="card-title">Type verdeling</div></div><div style="display:flex;align-items:center;justify-content:center;height:155px;gap:16px"><canvas id="chart-types" style="max-height:155px;max-width:155px"></canvas><div id="chart-types-legend" style="font-size:12px;display:flex;flex-direction:column;gap:7px"></div></div></div>
+    <div class="card" id="import-stats-card" style="display:none"><div class="card-header"><div class="card-title">Geïmporteerde activiteiten</div><span class="badge badge-orange" id="strava-count-badge">0</span></div><div class="chart-wrap"><canvas id="chart-strava-km"></canvas></div></div>
+  </div>
+
+  <div id="page-activities" class="page">
+    <div class="section-hdr">Koppel sport-app</div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Strava</div><span class="badge badge-orange" id="strava-status-badge">Niet gekoppeld</span></div>
+      <div id="strava-connect-area">
+        <div class="info-box">Maak gratis Strava API-app aan:<br>1. <a href="https://www.strava.com/settings/api" target="_blank">strava.com/settings/api</a><br>2. Authorization Callback Domain: <strong>localhost</strong><br>3. Vul Client ID en Secret in:</div>
+        <div class="connect-input-group"><input class="setup-input" type="text" id="strava-client-id" placeholder="Client ID"><input class="setup-input" type="password" id="strava-client-secret" placeholder="Client Secret"></div>
+        <button class="strava-connect-btn" id="strava-auth-btn">🔗 Verbinden met Strava</button>
+      </div>
+      <div id="strava-connected-area" style="display:none">
+        <div class="strava-connected">✅ <span id="strava-athlete-name">Gekoppeld</span></div>
+        <button class="day-btn" id="strava-sync-btn" style="width:100%;text-align:center;padding:10px;margin-bottom:8px">↻ Synchroniseer activiteiten</button>
+        <button class="day-btn" id="strava-disconnect-btn" style="color:var(--danger);border-color:var(--danger)">Ontkoppelen</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">CSV importeren</div><span class="badge badge-blue">Strava & Garmin</span></div>
+      <div class="info-box"><strong>Strava:</strong> Profiel → Mijn account → Exporteer archief → activities.csv<br><strong>Garmin:</strong> <a href="https://connect.garmin.com/modern/activities" target="_blank">connect.garmin.com</a> → Activities → Export CSV</div>
+      <div class="upload-area" id="upload-area"><div class="upload-icon">📂</div><div class="upload-text">Tik om CSV te selecteren<br><small>Strava activities.csv of Garmin export</small></div></div>
+      <input type="file" id="file-input" accept=".csv,.CSV">
+      <div id="csv-status"></div>
+    </div>
+    <div class="card" id="all-activities-card" style="display:none">
+      <div class="card-header"><div class="card-title">Recente activiteiten</div><span class="badge badge-green" id="activities-count">0</span></div>
+      <div id="all-activities-list"></div>
+    </div>
+  </div>
+
+  <div id="page-food" class="page">
+    <div class="section-hdr">Voedingsplan</div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Vandaag</div><button class="day-btn" id="generate-food-btn" style="border-color:var(--accent2);color:var(--accent2)">⟳ Genereer</button></div>
+      <div id="food-plan"><div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">Genereer je voedingsplan voor vandaag</div></div>
+    </div>
+    <div class="card" id="macro-card" style="display:none">
+      <div class="card-header"><div class="card-title">Macro's vandaag</div></div>
+      <div class="stats-row"><div class="stat-box"><div class="stat-val" id="m-kcal">—</div><div class="stat-lbl">kcal</div></div><div class="stat-box"><div class="stat-val" id="m-prot">—</div><div class="stat-lbl">eiwit g</div></div><div class="stat-box"><div class="stat-val" id="m-carb">—</div><div class="stat-lbl">koolhyd g</div></div></div>
+    </div>
+  </div>
+
+  <div id="page-coach" class="page">
+    <div class="section-hdr">AI Coach</div>
+    <div class="chat-area" id="chat-area"></div>
+    <div class="quick-btns">
+      <button class="quick-btn" onclick="sendQuick('Hoe herstel ik goed na mijn training van gisteren?')">🔄 Herstel</button>
+      <button class="quick-btn" onclick="sendQuick('Analyseer mijn recente activiteiten en geef coaching advies')">📊 Analyseer</button>
+      <button class="quick-btn" onclick="sendQuick('Mijn benen zijn zwaar — moet ik toch trainen?')">😴 Ben moe</button>
+      <button class="quick-btn" onclick="sendQuick('Wat eten voor een lange duurloop morgen?')">🥗 Pre-run</button>
+      <button class="quick-btn" onclick="sendQuick('Maak mijn schema deze week iets lichter')">✏️ Lichter</button>
+    </div>
+    <div class="chat-input-row">
+      <textarea class="chat-input" id="chat-input" placeholder="Vraag je coach iets..." rows="1"></textarea>
+      <button class="send-btn" id="send-btn">↑</button>
+    </div>
+  </div>
+
+  <div id="page-profile" class="page">
+    <div class="section-hdr">Mijn profiel</div>
+    <div class="card" id="profile-card"></div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Feedback aan coach</div></div>
+      <textarea class="modal-input" id="feedback-input" placeholder="Hoe gaat het? Wat wil je aanpassen?"></textarea>
+      <button class="modal-btn" id="feedback-btn">Verstuur naar coach</button>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">API instellingen</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label class="setup-label" style="margin-bottom:0">Anthropic API Key</label>
+        <input class="setup-input" type="password" id="edit-apikey" placeholder="sk-ant-api03-...">
+        <label class="setup-label" style="margin-bottom:0;margin-top:4px">Proxy URL (Cloudflare Worker)</label>
+        <input class="setup-input" type="url" id="edit-proxy" placeholder="https://jouw-worker.workers.dev">
+        <button class="modal-btn" id="save-settings-btn" style="margin-top:4px">Instellingen opslaan</button>
+      </div>
+    </div>
+    <div style="margin-top:12px;text-align:center"><button class="day-btn" id="reset-btn" style="color:var(--danger);border-color:var(--danger)">App resetten</button></div>
+  </div>
+
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-page="today"><span class="nav-icon">🏠</span>Vandaag</button>
+    <button class="nav-item" data-page="schema"><span class="nav-icon">📅</span>Schema</button>
+    <button class="nav-item" data-page="stats"><span class="nav-icon">📊</span>Stats</button>
+    <button class="nav-item" data-page="activities"><span class="nav-icon">🔗</span>Data</button>
+    <button class="nav-item" data-page="coach"><span class="nav-icon">💬</span>Coach</button>
+  </nav>
+</div>
+
+<div class="modal-overlay" id="log-modal">
+  <div class="modal">
+    <div class="modal-title">Training loggen <button class="modal-close" id="close-log-modal">✕</button></div>
+    <div id="modal-day-info" style="margin-bottom:10px;font-size:13px;color:var(--muted)"></div>
+    <div id="modal-detail-box" class="modal-detail" style="display:none"></div>
+    <textarea class="modal-input" id="log-input" placeholder="Hoe ging het? (bv: 5.2km, 28:30, hartslag 148)"></textarea>
+    <button class="modal-btn" id="log-submit-btn">Loggen & AI feedback</button>
+    <button class="modal-btn-out" id="log-skip-btn">Alleen afvinken</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="detail-modal">
+  <div class="modal">
+    <div class="modal-title"><span id="detail-modal-title">Training detail</span><button class="modal-close" id="close-detail-modal">✕</button></div>
+    <div id="detail-modal-body"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="edit-modal">
+  <div class="modal">
+    <div class="modal-title">Schema aanpassen <button class="modal-close" id="close-edit-modal">✕</button></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Week <span id="edit-week-nr">1</span> — verander type of omschrijving</div>
+    <div id="edit-rows"></div>
+    <button class="modal-btn" id="save-edit-btn" style="margin-top:14px">Opslaan</button>
+  </div>
+</div>
+
+<script>
+let profile=null,schema=null,currentWeek=1,chatHistory=[],logTargetDay=null,logTargetDetail=null;
+let importedActivities=[],stravaToken=null,charts={};
+const WEEKS=8,DAYS=['ma','di','wo','do','vr','za','zo'];
+
+function init(){
+  const s=localStorage.getItem('rc_profile');if(!s)return;
+  profile=JSON.parse(s);
+  schema=JSON.parse(localStorage.getItem('rc_schema')||'null');
+  chatHistory=JSON.parse(localStorage.getItem('rc_chat')||'[]');
+  importedActivities=JSON.parse(localStorage.getItem('rc_activities')||'[]');
+  stravaToken=JSON.parse(localStorage.getItem('rc_strava')||'null');
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  updateTopbar();renderProfile();renderToday();renderSchema();renderActivitiesList();updateStravaUI();checkStravaCallback();updateStreakBadge();
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+
+function updateTopbar(){
+  const n=new Date(),dn=['zo','ma','di','wo','do','vr','za'],mn=['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+  document.getElementById('topbar-date').textContent=`${dn[n.getDay()]} ${n.getDate()} ${mn[n.getMonth()]}`;
+}
+
+document.querySelectorAll('.opt-btn').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll(`[data-group="${b.dataset.group}"]`).forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+}));
+
+document.getElementById('start-btn').addEventListener('click',()=>{
+  const k=document.getElementById('setup-api').value.trim();
+  if(!k){alert('Voer je API key in');return;}
+  profile={apiKey:k,name:document.getElementById('setup-name').value.trim()||'Atleet',runLevel:document.querySelector('[data-group="run-level"].active')?.dataset.val||'beginner',goal:document.querySelector('[data-group="goal"].active')?.dataset.val||'5km opbouwen',cycling:document.querySelector('[data-group="cycling"].active')?.dataset.val||'ja',days:parseInt(document.querySelector('[data-group="days"].active')?.dataset.val||'4'),weight:document.getElementById('setup-weight').value||'75',height:document.getElementById('setup-height').value||'175',startDate:new Date().toISOString()};
+  localStorage.setItem('rc_profile',JSON.stringify(profile));
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  updateTopbar();renderProfile();renderToday();
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  autoGreet();
+});
+
+document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  b.classList.add('active');
+  document.getElementById('page-'+b.dataset.page).classList.add('active');
+  if(b.dataset.page==='stats')setTimeout(renderCharts,80);
+  if(b.dataset.page==='today')renderToday();
+  if(b.dataset.page==='profile'){
+    const ep=document.getElementById('edit-proxy');
+    if(ep&&profile?.proxyUrl)ep.placeholder=profile.proxyUrl;
+  }
+}));
+
+function switchTo(page){
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+  document.getElementById('page-'+page)?.classList.add('active');
+}
+
+function getTodayCode(){const i=new Date().getDay();return DAYS[i===0?6:i-1];}
+
+function renderToday(){
+  if(!schema){
+    document.getElementById('today-hero-wrap').innerHTML=`<div class="today-hero"><div class="today-label">Welkom, ${profile?.name||'Atleet'}</div><div class="today-workout">Nog geen schema</div><div class="today-detail">Ga naar Schema en genereer je trainingsplan.</div><div class="today-actions"><button class="today-btn today-btn-primary" onclick="switchTo('schema')">Schema genereren →</button></div></div>`;
+    return;
+  }
+  const wk=schema[currentWeek-1];
+  const tc=getTodayCode();
+  document.getElementById('week-nr-today').textContent=currentWeek;
+  const todayDay=wk?.dagen?.find(d=>d.dag===tc);
+  const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
+  const wl=logs[`w${currentWeek}`]||{};
+  const done=todayDay&&!!wl[todayDay.dag];
+  const isRest=todayDay?.type==='rest';
+  let heroHTML='';
+  if(!todayDay)heroHTML=`<div class="today-hero"><div class="today-label">Vandaag</div><div class="today-workout">Geen training gepland</div><div class="today-detail">Rust of vrije keuze dag.</div></div>`;
+  else if(isRest)heroHTML=`<div class="today-hero"><div class="today-label">Vandaag · Rustdag 💤</div><div class="today-workout">Herstel & rust</div><div class="today-detail">Actief herstel: stretch, wandel licht, foam roll.</div></div>`;
+  else if(done)heroHTML=`<div class="today-hero" style="background:linear-gradient(135deg,rgba(91,227,160,.1) 0%,rgba(200,240,96,.04) 100%);border-color:rgba(91,227,160,.3)"><div class="today-label" style="color:var(--accent2)">Vandaag · Voltooid ✓</div><div class="today-workout">${todayDay.beschrijving}</div><div class="today-detail">${wl[todayDay.dag]?.notes||'Goed gedaan!'}</div><div class="today-actions"><button class="today-btn today-btn-secondary" onclick="switchTo('coach')">Coach vragen 💬</button></div></div>`;
+  else{const icon=todayDay.type==='bike'?'🚴':todayDay.type==='cross'?'🏋️':'🏃';heroHTML=`<div class="today-hero"><div class="today-label">Vandaag · ${todayDay.dag.toUpperCase()} ${icon}</div><div class="today-workout">${todayDay.beschrijving}</div><div class="today-detail">${(todayDay.detail||'').substring(0,130)}${(todayDay.detail||'').length>130?'…':''}</div><div class="today-actions"><button class="today-btn today-btn-primary" onclick="openLogModal('${todayDay.dag}','${(todayDay.beschrijving||'').replace(/'/g,"\\'")}','${(todayDay.detail||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')">Training loggen</button><button class="today-btn today-btn-secondary" onclick="openDetailModal('${todayDay.dag}')">Details →</button></div></div>`;}
+  document.getElementById('today-hero-wrap').innerHTML=heroHTML;
+
+  const trainDays=wk?.dagen?.filter(d=>d.type!=='rest')||[];
+  const doneCount=trainDays.filter(d=>wl[d.dag]).length;
+  const streak=calcStreak();
+  document.getElementById('stat-km').textContent=wk?.km_totaal||'—';
+  document.getElementById('stat-done').textContent=`${doneCount}/${trainDays.length}`;
+  document.getElementById('stat-streak').textContent=streak;
+  document.getElementById('week-prog').style.width=(doneCount/Math.max(trainDays.length,1)*100)+'%';
+
+  const feelings=JSON.parse(localStorage.getItem('rc_feelings')||'{}');
+  const feel=feelings[new Date().toDateString()];
+  document.querySelectorAll('.rec-btn').forEach(b=>b.className='rec-btn');
+  if(feel)document.querySelector(`[data-feel="${feel}"]`)?.classList.add(`active-${feel}`);
+
+  if(wk?.dagen){
+    document.getElementById('today-week-list').innerHTML=wk.dagen.map(d=>{
+      const isDone=!!wl[d.dag];
+      const isT=d.dag===tc;
+      const tc2=isDone?'dot-done':`dot-${d.type}`;
+      const tg=isDone?'tag-done':`tag-${d.type}`;
+      return `<div class="day-row" style="${isT?'background:rgba(200,240,96,.04);margin:0 -14px;padding:10px 14px':''}">
+        <div class="day-dot ${tc2}"></div>
+        <div class="day-info">
+          <div class="day-name">${d.dag}${isT?' <span style="font-size:10px;color:var(--accent3)">← vandaag</span>':''} <span class="tag ${tg}">${isDone?'✓':d.type}</span></div>
+          <div class="day-desc">${d.beschrijving}</div>
+        </div>
+        ${d.type!=='rest'&&!isDone?`<div class="day-actions"><button class="day-btn" onclick="openLogModal('${d.dag}','${(d.beschrijving||'').replace(/'/g,"\\'")}','${(d.detail||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')">Log</button><button class="day-btn done-btn" onclick="markDone('${d.dag}');renderToday()">✓</button></div>`:''}
+      </div>`;
+    }).join('');
+  }
+}
+
+function calcStreak(){
+  const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
+  let s=0;
+  for(let w=currentWeek;w>=1;w--){
+    const wl=logs[`w${w}`]||{};
+    const wk=schema?.[w-1];if(!wk)break;
+    const done=wk.dagen.filter(d=>d.type!=='rest'&&wl[d.dag]).length;
+    if(done>0)s+=done;else if(w<currentWeek)break;
+  }
+  return s;
+}
+
+function updateStreakBadge(){
+  const s=calcStreak();
+  const el=document.getElementById('streak-badge');
+  if(s>0){el.textContent=`🔥 ${s}`;el.style.display='inline-flex';}else el.style.display='none';
+}
+
+function logFeeling(feel,btn){
+  document.querySelectorAll('.rec-btn').forEach(b=>b.className='rec-btn');
+  btn.classList.add(`active-${feel}`);
+  const f=JSON.parse(localStorage.getItem('rc_feelings')||'{}');
+  f[new Date().toDateString()]=feel;
+  localStorage.setItem('rc_feelings',JSON.stringify(f));
+  const msgs={great:'Ik voel me vandaag top en energiek!',ok:'Ik voel me vandaag goed.',tired:'Ik ben vandaag best moe, wat adviseer je?',bad:'Ik voel me niet goed vandaag. Rust nemen?'};
+  switchTo('coach');addBubble('user',msgs[feel]);askCoach(msgs[feel]);
+}
+
+document.getElementById('generate-schema-btn').addEventListener('click',generateSchema);
+async function generateSchema(){
+  const btn=document.getElementById('generate-schema-btn');
+  btn.textContent='...';btn.disabled=true;
+  const p=`Je bent professionele loopcoach. Maak een 8-weken opbouwend trainingsschema voor een ${profile.runLevel} atleet. Doel: ${profile.goal}. ${profile.cycling==='ja'?'Integreer 1-2 fietssessies/week als aerobe basis of actief herstel.':''} Precies ${profile.days} trainingsdagen/week, rest rustdagen. Bouw geleidelijk op.
+Geef UITSLUITEND een JSON array terug, geen uitleg, geen markdown, geen code blocks. Voorbeeld formaat:
+[{"week":1,"focus":"Rustige opbouw","km_totaal":15,"dagen":[{"dag":"ma","type":"run","beschrijving":"Rustige duurloop 5km","detail":"Loop 5km in een comfortabel tempo, hartslag zone 2 (60-70%). Warm op 5 min wandelen."},{"dag":"di","type":"rest","beschrijving":"Rust","detail":"Actief herstel, rek- en strekoefeningen."},{"dag":"wo","type":"run","beschrijving":"Intervaltraining","detail":"Na warming up: 4x400m in hoger tempo, 90s rust ertussen."},{"dag":"do","type":"rest","beschrijving":"Rust","detail":"Rust."},{"dag":"vr","type":"bike","beschrijving":"Fietstocht 45min","detail":"Rustige fietstocht als actief herstel, hartslag laag houden."},{"dag":"za","type":"run","beschrijving":"Lange duurloop 8km","detail":"Langste loop van de week, rustig tempo, focus op uithouding."},{"dag":"zo","type":"rest","beschrijving":"Rust","detail":"Volledige rust."}]}]
+Geef alle 8 weken, alle 7 dagen per week. Km_totaal is alleen voor hardloopkilometers.`;
+  try{
+    const res=await callClaude([{role:'user',content:p}],2800);
+    // Extract JSON array robustly — find first '[' to last ']'
+    const start=res.indexOf('[');
+    const end=res.lastIndexOf(']');
+    if(start===-1||end===-1)throw new Error('Geen JSON array gevonden in antwoord.\n\nAntwoord was:\n'+res.substring(0,300));
+    const jsonStr=res.substring(start,end+1);
+    schema=JSON.parse(jsonStr);
+    if(!Array.isArray(schema)||schema.length===0)throw new Error('Schema is leeg of geen array.');
+    // Ensure each week has required fields
+    schema=schema.map((wk,i)=>({
+      week:wk.week||i+1,
+      focus:wk.focus||`Week ${i+1}`,
+      km_totaal:Number(wk.km_totaal)||0,
+      dagen:Array.isArray(wk.dagen)?wk.dagen.map(d=>({
+        dag:d.dag||'?',
+        type:d.type||'rest',
+        beschrijving:d.beschrijving||d.type||'',
+        detail:d.detail||''
+      })):[]
+    }));
+    localStorage.setItem('rc_schema',JSON.stringify(schema));
+    renderSchema();renderToday();
+  }catch(e){
+    console.error('Schema fout:',e);
+    alert('Fout bij genereren schema:\n\n'+e.message+'\n\nProbeer opnieuw. Als het blijft falen, controleer je API key.');
+  }
+  btn.textContent='⟳ Genereer';btn.disabled=false;
+}
+
+function renderSchema(){
+  document.getElementById('week-label').textContent=`Week ${currentWeek} van ${WEEKS}`;
+  if(!schema)return;
+  const wk=schema[currentWeek-1];if(!wk)return;
+  const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
+  const wl=logs[`w${currentWeek}`]||{};
+  const trainDays=wk.dagen.filter(d=>d.type!=='rest');
+  const doneCount=trainDays.filter(d=>wl[d.dag]).length;
+  const pct=Math.round(doneCount/Math.max(trainDays.length,1)*100);
+  document.getElementById('schema-list').innerHTML=
+    `<div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-style:italic;line-height:1.5">${wk.focus||''}</div>`+
+    wk.dagen.map(d=>{
+      const done=!!wl[d.dag];
+      const tc=done?'dot-done':`dot-${d.type}`;
+      const tg=done?'tag-done':`tag-${d.type}`;
+      return `<div class="day-row">
+        <div class="day-dot ${tc}"></div>
+        <div class="day-info">
+          <div class="day-name">${d.dag} <span class="tag ${tg}">${done?'✓ gedaan':d.type}</span></div>
+          <div class="day-desc">${d.beschrijving}</div>
+        </div>
+        ${d.type!=='rest'?(!done?`<div class="day-actions">
+          <button class="day-btn" onclick="openDetailModal('${d.dag}')">ℹ</button>
+          <button class="day-btn" onclick="openLogModal('${d.dag}','${(d.beschrijving||'').replace(/'/g,"\\'")}','${(d.detail||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')">Log</button>
+          <button class="day-btn done-btn" onclick="markDone('${d.dag}');renderSchema()">✓</button>
+        </div>`:`<div class="day-actions"><button class="day-btn" style="color:var(--muted);font-size:10px" onclick="undoDone('${d.dag}')">↩undo</button></div>`):''}
+      </div>`;
+    }).join('');
+  document.getElementById('streak-card').style.display='block';
+  document.getElementById('streak-pct').textContent=pct+'%';
+  renderStreakDots();
+}
+
+function renderStreakDots(){
+  if(!schema)return;
+  const wk=schema[currentWeek-1];if(!wk)return;
+  const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
+  const wl=logs[`w${currentWeek}`]||{};
+  const tc=getTodayCode();const ti=DAYS.indexOf(tc);
+  document.getElementById('streak-dots').innerHTML=wk.dagen.map((d,i)=>{
+    const done=!!wl[d.dag];
+    const isT=i===ti;
+    let cls=i<ti?(done?'streak-done':'streak-miss'):(done?'streak-done':'streak-future');
+    return `<div class="streak-dot ${cls}${isT?' streak-today':''}">${done?'✓':d.dag.substring(0,1)}</div>`;
+  }).join('');
+}
+
+function markDone(dag,notes){
+  const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
+  const key=`w${currentWeek}`;
+  if(!logs[key])logs[key]={};
+  logs[key][dag]={done:true,ts:Date.now(),notes:notes||''};
+  localStorage.setItem('rc_logs',JSON.stringify(logs));
+  updateStreakBadge();
+}
+
+function undoDone(dag){
+  const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
+  const key=`w${currentWeek}`;
+  if(logs[key])delete logs[key][dag];
+  localStorage.setItem('rc_logs',JSON.stringify(logs));
+  renderSchema();updateStreakBadge();
+}
+
+document.getElementById('prev-week').addEventListener('click',()=>{if(currentWeek>1){currentWeek--;renderSchema();}});
+document.getElementById('next-week').addEventListener('click',()=>{if(currentWeek<WEEKS){currentWeek++;renderSchema();}});
+
+function openDetailModal(dag){
+  if(!schema)return;
+  const d=schema[currentWeek-1]?.dagen?.find(x=>x.dag===dag);if(!d)return;
+  document.getElementById('detail-modal-title').textContent=`${d.dag.toUpperCase()} — ${d.beschrijving}`;
+  document.getElementById('detail-modal-body').innerHTML=`
+    <span class="tag tag-${d.type}" style="margin-bottom:14px;display:inline-block">${d.type}</span>
+    <div style="font-size:14px;line-height:1.8;color:var(--text);margin-bottom:16px;white-space:pre-line">${d.detail||d.beschrijving}</div>
+    <button class="modal-btn" onclick="closeDetailModal();openLogModal('${d.dag}','${(d.beschrijving||'').replace(/'/g,"\\'")}','${(d.detail||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')">Training loggen</button>`;
+  document.getElementById('detail-modal').classList.add('open');
+}
+function closeDetailModal(){document.getElementById('detail-modal').classList.remove('open');}
+document.getElementById('close-detail-modal').addEventListener('click',closeDetailModal);
+
+function openLogModal(dag,desc,detail){
+  logTargetDay=dag;logTargetDetail=detail||'';
+  document.getElementById('modal-day-info').textContent=`${dag}: ${desc}`;
+  const db=document.getElementById('modal-detail-box');
+  if(detail&&detail.length>10){db.textContent=detail.substring(0,200)+(detail.length>200?'…':'');db.style.display='block';}else db.style.display='none';
+  document.getElementById('log-input').value='';
+  document.getElementById('log-modal').classList.add('open');
+}
+document.getElementById('close-log-modal').addEventListener('click',()=>document.getElementById('log-modal').classList.remove('open'));
+document.getElementById('log-skip-btn').addEventListener('click',()=>{
+  document.getElementById('log-modal').classList.remove('open');
+  markDone(logTargetDay);renderSchema();renderToday();
+});
+document.getElementById('log-submit-btn').addEventListener('click',async()=>{
+  const txt=document.getElementById('log-input').value.trim();
+  document.getElementById('log-modal').classList.remove('open');
+  markDone(logTargetDay,txt);renderSchema();renderToday();
+  if(!txt)return;
+  switchTo('coach');addBubble('user',`Training gelogd (${logTargetDay}): ${txt}`);
+  await askCoach(`Ik heb mijn training gelogd: "${txt}". ${logTargetDetail?'Gepland was: '+logTargetDetail.substring(0,100)+'.':''} Geef motiverende feedback en 1 hersteltip.`);
+});
+
+document.getElementById('edit-schema-btn').addEventListener('click',()=>{
+  if(!schema){alert('Genereer eerst een schema.');return;}
+  const wk=schema[currentWeek-1];
+  document.getElementById('edit-week-nr').textContent=currentWeek;
+  document.getElementById('edit-rows').innerHTML=wk.dagen.map((d,i)=>`
+    <div class="edit-row">
+      <div class="edit-day-label">${d.dag}</div>
+      <select class="edit-select" id="et-${i}">${['run','bike','rest','cross','swim','walk'].map(t=>`<option value="${t}"${d.type===t?' selected':''}>${t}</option>`).join('')}</select>
+      <input class="edit-desc" id="ed-${i}" value="${(d.beschrijving||'').replace(/"/g,'&quot;')}" placeholder="Omschrijving">
+    </div>`).join('');
+  document.getElementById('edit-modal').classList.add('open');
+});
+document.getElementById('close-edit-modal').addEventListener('click',()=>document.getElementById('edit-modal').classList.remove('open'));
+document.getElementById('save-edit-btn').addEventListener('click',()=>{
+  schema[currentWeek-1].dagen.forEach((d,i)=>{
+    d.type=document.getElementById(`et-${i}`)?.value||d.type;
+    d.beschrijving=document.getElementById(`ed-${i}`)?.value||d.beschrijving;
+  });
+  localStorage.setItem('rc_schema',JSON.stringify(schema));
+  document.getElementById('edit-modal').classList.remove('open');
+  renderSchema();renderToday();
+});
+
+function renderCharts(){
+  const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
+  const data=Array.from({length:WEEKS},(_,i)=>{
+    const wk=schema?.[i];const wl=logs[`w${i+1}`]||{};
+    const planned=wk?.km_totaal||0;
+    const trainDays=wk?.dagen?.filter(d=>d.type!=='rest')||[];
+    const done=trainDays.filter(d=>wl[d.dag]).length;
+    return{planned,done,total:trainDays.length};
+  });
+  const labels=data.map((_,i)=>`W${i+1}`);
+  const planned=data.map(d=>d.planned);
+  const completed=data.map(d=>d.total?Math.round(d.planned*(d.done/d.total)*10)/10:0);
+  const pct=data.map(d=>d.total?Math.round(d.done/d.total*100):0);
+  const cfg={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e2333',borderColor:'rgba(255,255,255,.1)',borderWidth:1,titleColor:'#f0f0f0',bodyColor:'#7a8099',padding:10}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#7a8099',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#7a8099',font:{size:10}},beginAtZero:true}}};
+
+  if(charts.km)charts.km.destroy();
+  charts.km=new Chart(document.getElementById('chart-km'),{type:'bar',data:{labels,datasets:[{label:'Gepland',data:planned,backgroundColor:'rgba(200,240,96,.15)',borderColor:'#c8f060',borderWidth:1.5,borderRadius:4},{label:'Voltooid',data:completed,backgroundColor:'rgba(91,227,160,.45)',borderColor:'#5be3a0',borderWidth:1.5,borderRadius:4}]},options:{...cfg,plugins:{...cfg.plugins,legend:{display:true,labels:{color:'#7a8099',font:{size:10},boxWidth:10,padding:12}}}}});
+  document.getElementById('total-km-badge').textContent=Math.round(planned.reduce((a,b)=>a+b,0))+' km';
+
+  if(charts.sess)charts.sess.destroy();
+  charts.sess=new Chart(document.getElementById('chart-sessions'),{type:'line',data:{labels,datasets:[{data:pct,borderColor:'#60c8f0',backgroundColor:'rgba(96,200,240,.08)',borderWidth:2,pointBackgroundColor:'#60c8f0',pointRadius:4,tension:.35,fill:true}]},options:{...cfg,scales:{...cfg.scales,y:{...cfg.scales.y,max:100,ticks:{...cfg.scales.y.ticks,callback:v=>v+'%'}}}}});
+  const nonZero=pct.filter(x=>x>0);
+  document.getElementById('avg-comp-badge').textContent=nonZero.length?`gem. ${Math.round(nonZero.reduce((a,b)=>a+b,0)/nonZero.length)}%`:'—';
+
+  let counts={run:0,bike:0,cross:0,swim:0,walk:0};
+  if(schema)schema.forEach((wk,wi)=>{const wl=logs[`w${wi+1}`]||{};wk.dagen.forEach(d=>{if(wl[d.dag]&&d.type in counts)counts[d.type]++;});});
+  const te=Object.entries(counts).filter(([,v])=>v>0);
+  const tc2={run:'#c8f060',bike:'#60c8f0',cross:'#f0a860',swim:'#60a0f0',walk:'#c090f0'};
+  const tn={run:'Hardlopen',bike:'Fietsen',cross:'Cross',swim:'Zwemmen',walk:'Wandelen'};
+  if(charts.types)charts.types.destroy();
+  charts.types=new Chart(document.getElementById('chart-types'),{type:'doughnut',data:{labels:te.map(([k])=>k),datasets:[{data:te.length?te.map(([,v])=>v):[1],backgroundColor:te.length?te.map(([k])=>tc2[k]||'#888'):['#333'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'62%'}});
+  document.getElementById('chart-types-legend').innerHTML=te.map(([k,v])=>`<div style="display:flex;align-items:center;gap:7px"><div style="width:9px;height:9px;border-radius:50%;background:${tc2[k]};flex-shrink:0"></div><span style="color:var(--muted)">${tn[k]||k}: ${v}×</span></div>`).join('');
+
+  if(importedActivities.length>0){
+    document.getElementById('import-stats-card').style.display='block';
+    document.getElementById('strava-count-badge').textContent=importedActivities.length;
+    const recent=importedActivities.slice(0,16).reverse();
+    if(charts.stravaKm)charts.stravaKm.destroy();
+    charts.stravaKm=new Chart(document.getElementById('chart-strava-km'),{type:'bar',data:{labels:recent.map(a=>a.date?.substring(5,10)||'?'),datasets:[{data:recent.map(a=>a.distance||0),backgroundColor:recent.map(a=>a.type==='run'?'rgba(200,240,96,.55)':a.type==='bike'?'rgba(96,200,240,.55)':'rgba(240,168,96,.55)'),borderRadius:3}]},options:cfg});
+  }
+}
+
+function parseCSVLine(line){
+  const r=[];let cur='',inQ=false;
+  for(let i=0;i<line.length;i++){
+    const c=line[i];
+    if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
+    else if(c===','&&!inQ){r.push(cur.trim());cur='';}
+    else cur+=c;
+  }
+  r.push(cur.trim());return r;
+}
+
+function normAct(obj){
+  const get=(...keys)=>{
+    for(const k of keys){
+      const f=Object.keys(obj).find(ok=>ok.toLowerCase()===k.toLowerCase()||ok.toLowerCase().replace(/[\s_]/g,'')===k.toLowerCase().replace(/[\s_]/g,''));
+      if(f&&obj[f]&&obj[f]!=='--'&&obj[f]!=='')return obj[f];
+    }
+    for(const k of keys){
+      const f=Object.keys(obj).find(ok=>ok.toLowerCase().includes(k.toLowerCase().split(' ')[0]));
+      if(f&&obj[f]&&obj[f]!=='--'&&obj[f]!=='')return obj[f];
+    }
+    return'';
+  };
+  const rt=(get('Activity Type','Type','Sport','activity_type','Activiteitstype')||'').toLowerCase();
+  let type='run';
+  if(rt.includes('ride')||rt.includes('cycling')||rt.includes('bike')||rt.includes('fiets')||rt.includes('virtual'))type='bike';
+  else if(rt.includes('swim')||rt.includes('zwem'))type='swim';
+  else if(rt.includes('walk')||rt.includes('hike')||rt.includes('wandel'))type='walk';
+  else if(rt.includes('strength')||rt.includes('yoga')||rt.includes('cross'))type='cross';
+  let dist=parseFloat((get('Distance','Afstand','Total Distance','distance')||'0').replace(',','.').replace(/[^\d.]/g,''))||0;
+  if(dist>500)dist=dist/1000;
+  return{type,name:get('Activity Name','Title','Name','Naam','Activiteitsnaam')||rt||'Training',distance:Math.round(dist*10)/10,time:get('Moving Time','Elapsed Time','Time','Duration','Tijd'),date:(get('Activity Date','Date','Start Time','Datum','date','start_date')||'').substring(0,16),hr:get('Average Heart Rate','Avg HR','Hartslag')?Math.round(parseFloat(get('Average Heart Rate','Avg HR','Hartslag'))):null,elev:get('Elevation Gain','Total Ascent','Stijging')?Math.round(parseFloat(get('Elevation Gain','Total Ascent','Stijging'))):null};
+}
+
+document.getElementById('upload-area').addEventListener('click',()=>document.getElementById('file-input').click());
+document.getElementById('file-input').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=ev=>handleCSV(ev.target.result,f.name);
+  r.readAsText(f,'UTF-8');e.target.value='';
+});
+
+function handleCSV(text,fn){
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  if(lines.length<2){showStatus('error',`"${fn}" lijkt leeg.`);return;}
+  const hdrs=parseCSVLine(lines[0]);
+  if(hdrs.length<2){showStatus('error','Kon geen kolommen lezen. Correct CSV bestand?');return;}
+  const acts=[];
+  for(let i=1;i<lines.length;i++){
+    if(!lines[i].trim())continue;
+    const vals=parseCSVLine(lines[i]);
+    const obj={};hdrs.forEach((h,idx)=>{obj[h]=vals[idx]||'';});
+    const a=normAct(obj);
+    if(a.distance>0||a.time||a.date)acts.push(a);
+  }
+  if(!acts.length){showStatus('error',`Geen activiteiten herkend in "${fn}".\nKolommen: ${hdrs.slice(0,6).join(', ')}…`);return;}
+  importedActivities=[...acts,...importedActivities].slice(0,300);
+  localStorage.setItem('rc_activities',JSON.stringify(importedActivities));
+  renderActivitiesList();showStatus('ok',`✅ ${acts.length} activiteiten geïmporteerd uit "${fn}"`);
+}
+
+function showStatus(t,msg){
+  const el=document.getElementById('csv-status');
+  el.style.cssText=`color:${t==='ok'?'var(--accent2)':'var(--danger)'};font-size:12px;line-height:1.5;padding:8px 0;white-space:pre-line`;
+  el.textContent=msg;
+}
+
+function renderActivitiesList(){
+  if(!importedActivities.length)return;
+  document.getElementById('all-activities-card').style.display='block';
+  document.getElementById('activities-count').textContent=importedActivities.length;
+  const ic={run:'🏃',bike:'🚴',swim:'🏊',walk:'🚶',cross:'🏋️'};
+  document.getElementById('all-activities-list').innerHTML=importedActivities.slice(0,30).map(a=>`
+    <div class="act-item">
+      <div class="act-icon">${ic[a.type]||'🏃'}</div>
+      <div class="act-info">
+        <div class="act-name">${a.name}</div>
+        <div class="act-meta">${a.distance?a.distance+' km':''}${a.time?' · '+a.time:''}${a.date?' · '+a.date.substring(0,10):''}${a.hr?' · ♥ '+a.hr:''}${a.elev?' · ↑'+a.elev+'m':''}</div>
+      </div>
+    </div>`).join('');
+}
+
+document.getElementById('strava-auth-btn').addEventListener('click',()=>{
+  const id=document.getElementById('strava-client-id').value.trim();
+  const sec=document.getElementById('strava-client-secret').value.trim();
+  if(!id||!sec){alert('Vul Client ID en Secret in');return;}
+  localStorage.setItem('rc_strava_creds',JSON.stringify({clientId:id,clientSecret:sec}));
+  const redir=window.location.href.split('?')[0].split('#')[0];
+  window.location.href=`https://www.strava.com/oauth/authorize?client_id=${id}&redirect_uri=${encodeURIComponent(redir)}&response_type=code&scope=activity:read_all&approval_prompt=auto`;
+});
+
+async function checkStravaCallback(){
+  const p=new URLSearchParams(window.location.search);
+  const code=p.get('code');if(!code)return;
+  window.history.replaceState({},'',window.location.pathname);
+  const creds=JSON.parse(localStorage.getItem('rc_strava_creds')||'null');if(!creds)return;
+  try{
+    const r=await fetch('https://www.strava.com/oauth/token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:creds.clientId,client_secret:creds.clientSecret,code,grant_type:'authorization_code'})});
+    if(!r.ok)throw new Error(await r.text());
+    const d=await r.json();
+    stravaToken={access_token:d.access_token,refresh_token:d.refresh_token,expires_at:d.expires_at,athlete:d.athlete};
+    localStorage.setItem('rc_strava',JSON.stringify(stravaToken));
+    updateStravaUI();switchTo('activities');syncStravaActivities();
+  }catch(e){alert('Strava koppeling mislukt: '+e.message);}
+}
+
+async function refreshStravaToken(){
+  if(!stravaToken)return false;
+  if(stravaToken.expires_at*1000>Date.now())return true;
+  const c=JSON.parse(localStorage.getItem('rc_strava_creds')||'null');if(!c)return false;
+  try{const r=await fetch('https://www.strava.com/oauth/token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:c.clientId,client_secret:c.clientSecret,refresh_token:stravaToken.refresh_token,grant_type:'refresh_token'})});const d=await r.json();stravaToken.access_token=d.access_token;stravaToken.refresh_token=d.refresh_token;stravaToken.expires_at=d.expires_at;localStorage.setItem('rc_strava',JSON.stringify(stravaToken));return true;}catch(e){return false;}
+}
+
+async function syncStravaActivities(){
+  const btn=document.getElementById('strava-sync-btn');
+  if(btn){btn.textContent='↻ Bezig…';btn.disabled=true;}
+  const ok=await refreshStravaToken();
+  if(!ok){alert('Token verlopen, koppel opnieuw.');if(btn){btn.textContent='↻ Synchroniseer activiteiten';btn.disabled=false;}return;}
+  try{
+    const r=await fetch('https://www.strava.com/api/v3/athlete/activities?per_page=80',{headers:{Authorization:`Bearer ${stravaToken.access_token}`}});
+    if(!r.ok)throw new Error(await r.text());
+    const acts=await r.json();
+    importedActivities=acts.map(a=>({type:a.type?.toLowerCase().includes('ride')||a.type?.toLowerCase().includes('virtual')?'bike':a.type?.toLowerCase().includes('swim')?'swim':a.type?.toLowerCase().includes('walk')?'walk':'run',name:a.name,distance:Math.round(a.distance/100)/10,time:fmtSec(a.moving_time),date:a.start_date_local?.substring(0,16)||'',hr:a.average_heartrate?Math.round(a.average_heartrate):null,elev:a.total_elevation_gain?Math.round(a.total_elevation_gain):null}));
+    localStorage.setItem('rc_activities',JSON.stringify(importedActivities));
+    renderActivitiesList();showStatus('ok',`✅ ${importedActivities.length} Strava activiteiten gesynchroniseerd`);
+  }catch(e){alert('Sync mislukt: '+e.message);}
+  if(btn){btn.textContent='↻ Synchroniseer activiteiten';btn.disabled=false;}
+}
+
+function updateStravaUI(){
+  if(stravaToken?.athlete){
+    document.getElementById('strava-connect-area').style.display='none';
+    document.getElementById('strava-connected-area').style.display='block';
+    const n=`${stravaToken.athlete.firstname||''} ${stravaToken.athlete.lastname||''}`.trim();
+    document.getElementById('strava-athlete-name').textContent=`Verbonden als ${n||'atleet'}`;
+    document.getElementById('strava-status-badge').textContent='Verbonden';
+    document.getElementById('strava-status-badge').className='badge badge-green';
+  }
+}
+
+document.getElementById('strava-sync-btn').addEventListener('click',syncStravaActivities);
+document.getElementById('strava-disconnect-btn').addEventListener('click',()=>{
+  stravaToken=null;localStorage.removeItem('rc_strava');localStorage.removeItem('rc_strava_creds');
+  document.getElementById('strava-connect-area').style.display='block';
+  document.getElementById('strava-connected-area').style.display='none';
+  document.getElementById('strava-status-badge').textContent='Niet gekoppeld';
+  document.getElementById('strava-status-badge').className='badge badge-orange';
+});
+
+function fmtSec(s){if(!s)return'';const h=Math.floor(s/3600),m=Math.floor(s%3600/60),sec=s%60;return h>0?`${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:`${m}:${String(sec).padStart(2,'0')}`;}
+
+document.getElementById('generate-food-btn').addEventListener('click',async()=>{
+  const btn=document.getElementById('generate-food-btn');btn.textContent='...';btn.disabled=true;
+  const today=new Date().toLocaleDateString('nl-NL',{weekday:'long'});
+  const wk=schema?.[currentWeek-1];
+  const todayTraining=wk?.dagen?.find(d=>d.dag===getTodayCode());
+  const ra=importedActivities.slice(0,4).map(a=>`${a.type} ${a.distance}km`).join(', ');
+  const feel=JSON.parse(localStorage.getItem('rc_feelings')||'{}')[new Date().toDateString()]||'';
+  const p=`Sportdiëtist. Voedingsplan voor ${today}. Atleet: ${profile.weight}kg, ${profile.height}cm, doel: ${profile.goal}. Training vandaag: ${todayTraining?todayTraining.beschrijving:'rust'}. ${ra?'Recente trainingen: '+ra+'.':''} ${feel?'Gevoel: '+feel+'.':''} ALLEEN JSON: {"kcal":getal,"eiwit":getal,"koolhydraten":getal,"vet":getal,"maaltijden":[{"naam":"Ontbijt","items":[{"naam":"item","kcal":getal}]}]} — 4 maaltijden, max 5 items elk.`;
+  try{
+    const res=await callClaude([{role:'user',content:p}],900);
+    const plan=JSON.parse(res.replace(/```(?:json)?\n?|\n?```/g,'').trim());
+    document.getElementById('m-kcal').textContent=plan.kcal;document.getElementById('m-prot').textContent=plan.eiwit;document.getElementById('m-carb').textContent=plan.koolhydraten;
+    document.getElementById('macro-card').style.display='block';
+    document.getElementById('food-plan').innerHTML=plan.maaltijden.map(m=>`<div class="meal-block"><div class="meal-title">${m.naam}</div>${m.items.map(i=>`<div class="food-item"><span>${i.naam}</span><span class="food-kcal">${i.kcal} kcal</span></div>`).join('')}</div>`).join('');
+  }catch(e){alert('Voedingsplan mislukt: '+e.message);}
+  btn.textContent='⟳ Genereer';btn.disabled=false;
+});
+
+function renderChat(){
+  const a=document.getElementById('chat-area');
+  a.innerHTML=chatHistory.map(m=>`<div class="bubble bubble-${m.role==='user'?'user':'ai'}">${m.content.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>`).join('');
+  a.scrollTop=a.scrollHeight;
+}
+function addBubble(role,text){
+  chatHistory.push({role,content:text});
+  if(chatHistory.length>50)chatHistory.splice(0,2);
+  localStorage.setItem('rc_chat',JSON.stringify(chatHistory));
+  renderChat();
+}
+function showTyping(){
+  const el=document.createElement('div');el.className='bubble bubble-typing';el.id='typing-bubble';
+  el.innerHTML='Coach denkt na<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>';
+  const a=document.getElementById('chat-area');a.appendChild(el);a.scrollTop=a.scrollHeight;
+}
+function removeTyping(){document.getElementById('typing-bubble')?.remove();}
+
+async function askCoach(msg){
+  showTyping();
+  const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
+  const wl=logs[`w${currentWeek}`]||{};
+  const wk=schema?.[currentWeek-1];
+  const trainDays=wk?.dagen?.filter(d=>d.type!=='rest')||[];
+  const doneCount=trainDays.filter(d=>wl[d.dag]).length;
+  const feel=JSON.parse(localStorage.getItem('rc_feelings')||'{}')[new Date().toDateString()]||'onbekend';
+  const ra=importedActivities.slice(0,5).map(a=>`${a.type} ${a.distance}km${a.date?' op '+a.date.substring(0,10):''}${a.hr?' (♥'+a.hr+')':''}`).join('; ');
+  const sys=`Je bent RunCoach, persoonlijke sport- en voedingscoach voor ${profile.name}. Profiel: niveau=${profile.runLevel}, doel=${profile.goal}, gewicht=${profile.weight}kg, lengte=${profile.height}cm, fietsen=${profile.cycling}. Status: week ${currentWeek}/${WEEKS}, ${doneCount}/${trainDays.length} sessies gedaan, streak=${calcStreak()}, gevoel vandaag=${feel}. Weekfocus: ${wk?.focus||'?'}. ${ra?'Recente activiteiten: '+ra+'.':''} Wees motiverend, persoonlijk en concreet. Max 4-5 zinnen tenzij gevraagd. Spreek ${profile.name} aan.`;
+  const msgs=[...chatHistory.slice(-12).map(m=>({role:m.role==='ai'?'assistant':m.role,content:m.content})),{role:'user',content:msg}];
+  try{const r=await callClaude(msgs,500,sys);removeTyping();addBubble('ai',r);}
+  catch(e){removeTyping();addBubble('ai','Sorry, er ging iets mis. Probeer het opnieuw.');console.error(e);}
+}
+
+document.getElementById('send-btn').addEventListener('click',sendChat);
+document.getElementById('chat-input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}});
+async function sendChat(){const input=document.getElementById('chat-input');const msg=input.value.trim();if(!msg)return;input.value='';input.style.height='auto';addBubble('user',msg);await askCoach(msg);}
+function sendQuick(msg){switchTo('coach');addBubble('user',msg);askCoach(msg);}
+async function autoGreet(){await askCoach(`Hoi! Ik ben ${profile.name}, ${profile.runLevel} loper met doel: ${profile.goal}. ${profile.cycling==='ja'?'Ik fiets ook regelmatig.':''} Geef een korte welkomstbegroeting en leg uit wat ik allemaal kan met deze app.`);}
+
+function renderProfile(){
+  if(!profile)return;
+  document.getElementById('profile-card').innerHTML=`
+    <div class="card-header"><div class="card-title">${profile.name}</div><span class="badge badge-yellow">${profile.runLevel}</span></div>
+    <div style="display:flex;flex-direction:column;gap:9px;font-size:13px">
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Doel</span><span>${profile.goal}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Fietsen</span><span>${profile.cycling==='ja'?'Ja':'Nee'}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Trainingsdagen</span><span>${profile.days}× per week</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Gewicht / lengte</span><span>${profile.weight} kg / ${profile.height} cm</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Gestart op</span><span>${new Date(profile.startDate).toLocaleDateString('nl-NL')}</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center"><span style="color:var(--muted)">Proxy URL</span><span style="font-size:11px;color:var(--accent3);word-break:break-all;text-align:right;max-width:60%">${profile.proxyUrl||'niet ingesteld'}</span></div>
+    </div>`;
+}
+
+document.getElementById('save-settings-btn').addEventListener('click',()=>{
+  const newKey=document.getElementById('edit-apikey').value.trim();
+  const newProxy=document.getElementById('edit-proxy').value.trim().replace(/\/+$/,'');
+  if(newKey) profile.apiKey=newKey;
+  if(newProxy) profile.proxyUrl=newProxy;
+  if(!newKey&&!newProxy){alert('Vul minimaal één veld in.');return;}
+  localStorage.setItem('rc_profile',JSON.stringify(profile));
+  document.getElementById('edit-apikey').value='';
+  document.getElementById('edit-proxy').value='';
+  renderProfile();
+  alert('✅ Instellingen opgeslagen! Probeer nu opnieuw het schema te genereren.');
+});
+
+document.getElementById('feedback-btn').addEventListener('click',async()=>{
+  const txt=document.getElementById('feedback-input').value.trim();if(!txt)return;
+  switchTo('coach');addBubble('user',`Feedback: ${txt}`);
+  await askCoach(`Feedback over mijn trainingen: "${txt}". Reageer empathisch, erken mijn ervaring, en stel 1-2 concrete aanpassingen voor.`);
+  document.getElementById('feedback-input').value='';
+});
+document.getElementById('reset-btn').addEventListener('click',()=>{if(confirm('Alle data wissen?')){localStorage.clear();location.reload();}});
+
+async function callClaude(messages,maxTokens=800,system=null){
+  const body={model:'claude-sonnet-4-20250514',max_tokens:maxTokens,messages};
+  if(system)body.system=system;
+  const url='https://runcoach-proxy.johandouma.workers.dev';
+  let r;
+  try{
+    r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-api-key':profile.apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify(body)});
+  }catch(err){
+    throw new Error('Kan proxy niet bereiken: '+err.message);
+  }
+  if(!r.ok){
+    let msg=r.status;try{const j=await r.json();msg=j.error?.message||msg;}catch(e){}
+    throw new Error('API fout ('+msg+')');
+  }
+  return(await r.json()).content[0].text;
+}
+
+document.getElementById('chat-input').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';});
+
+init();
+</script>
+</body>
+</html>

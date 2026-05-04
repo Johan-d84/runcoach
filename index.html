@@ -314,6 +314,12 @@ textarea{overflow:hidden}
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Je data wordt automatisch gesynchroniseerd. Open de app op een ander apparaat om dezelfde data te zien.</div>
       <button class="day-btn" id="sync-now-btn" style="width:100%;text-align:center;padding:10px;border-color:var(--accent3);color:var(--accent3)">↻ Nu synchroniseren</button>
       <div id="sync-msg" style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center"></div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Jouw apparaat-ID: <span id="show-userid" style="font-family:'DM Mono',monospace;color:var(--accent3)"></span></div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.5">Gebruik op alle apparaten hetzelfde ID om data te synchroniseren:</div>
+        <input class="setup-input" type="text" id="edit-userid" placeholder="user_xb09d2ivqo" style="margin-bottom:8px;font-size:12px">
+        <button class="day-btn" id="save-userid-btn" style="width:100%;text-align:center;padding:8px">ID opslaan en synchroniseren</button>
+      </div>
     </div>
     <div class="card">
       <div class="card-header"><div class="card-title">API Key instellen</div></div>
@@ -327,6 +333,12 @@ textarea{overflow:hidden}
       <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Data wordt automatisch gesynchroniseerd tussen al je apparaten.</div>
       <button class="day-btn" id="sync-now-btn" style="width:100%;text-align:center;padding:10px;border-color:var(--accent3);color:var(--accent3)">↻ Nu synchroniseren</button>
       <div id="sync-msg" style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center"></div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Jouw apparaat-ID: <span id="show-userid" style="font-family:'DM Mono',monospace;color:var(--accent3)"></span></div>
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.5">Gebruik op alle apparaten hetzelfde ID om data te synchroniseren:</div>
+        <input class="setup-input" type="text" id="edit-userid" placeholder="user_xb09d2ivqo" style="margin-bottom:8px;font-size:12px">
+        <button class="day-btn" id="save-userid-btn" style="width:100%;text-align:center;padding:8px">ID opslaan en synchroniseren</button>
+      </div>
     </div>
     <div style="margin-top:12px;text-align:center"><button class="day-btn" id="reset-btn" style="color:var(--danger);border-color:var(--danger)">App resetten</button></div>
   </div>
@@ -417,6 +429,10 @@ document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=
   document.getElementById('page-'+b.dataset.page).classList.add('active');
   if(b.dataset.page==='stats')setTimeout(renderCharts,80);
   if(b.dataset.page==='today')renderToday();
+  if(b.dataset.page==='profile'){
+    const el=document.getElementById('show-userid');
+    if(el)el.textContent=getUserId();
+  }
   if(b.dataset.page==='profile'){
     const ep=document.getElementById('edit-proxy');
     if(ep&&profile?.proxyUrl)ep.placeholder=profile.proxyUrl;
@@ -1019,12 +1035,27 @@ document.getElementById('sync-now-btn')?.addEventListener('click',async()=>{
   const uid = getUserId();
   if(downloadOk) {
     msg.textContent='✅ Gesynchroniseerd om '+new Date().toLocaleTimeString('nl-NL');
-    renderToday();renderSchema();renderProfile();
+    // Herlaad alle data uit localStorage
+    profile=JSON.parse(localStorage.getItem('rc_profile')||'null');
+    schema=JSON.parse(localStorage.getItem('rc_schema')||'null');
+    chatHistory=JSON.parse(localStorage.getItem('rc_chat')||'[]');
+    importedActivities=JSON.parse(localStorage.getItem('rc_activities')||'[]');
+    renderToday();renderSchema();renderProfile();renderActivitiesList();renderChat();updateStreakBadge();
   } else if(uploadOk) {
     msg.textContent='✅ Opgeslagen in cloud (nog geen data van andere apparaten)';
   } else {
     msg.textContent='⚠️ Sync mislukt. User ID: '+uid;
   }
+});
+document.getElementById('save-userid-btn')?.addEventListener('click',async()=>{
+  const newId=document.getElementById('edit-userid').value.trim();
+  if(!newId){alert('Vul een ID in');return;}
+  localStorage.setItem('rc_userid',newId);
+  document.getElementById('show-userid').textContent=newId;
+  document.getElementById('edit-userid').value='';
+  // Sync with new ID
+  const btn=document.getElementById('sync-now-btn');
+  btn.click();
 });
 document.getElementById('reset-btn').addEventListener('click',()=>{if(confirm('Alle data wissen?')){localStorage.clear();location.reload();}});
 

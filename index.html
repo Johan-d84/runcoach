@@ -850,55 +850,75 @@ function buildDetail(d) {
 
 async function generateSchema(){
   const btn=document.getElementById('generate-schema-btn');
-  if(!profile?.apiKey){
-    alert('Geen API key ingesteld.\nGa naar Profiel → API Key instellen.');
-    return;
-  }
+  if(!profile?.apiKey){alert('Geen API key.\nGa naar Profiel → API Key instellen.');return;}
   btn.textContent='...';btn.disabled=true;
 
-  // Simple prompt - NO detail field to avoid JSON parse errors
-  const sysprompt = "Je bent een loopcoach. Geef uitsluitend valide JSON terug. Absoluut geen uitleg of markdown. VERBODEN in tekstwaarden: apostrofs, aanhalingstekens, backslashes. Gebruik alleen gewone letters, cijfers, spaties, punten, kommas en koppeltekens in tekstwaarden.";
+  const mhr=profile.mhr||180;
   const currentDist=profile.currentDist||10;
-const weekOneMax=Math.round(currentDist*1.1);
-const totalWeeks=profile.weeks||12;
-const userprompt = `Maak een ${totalWeeks}-weken trainingsschema voor een loper met doel: ${profile.goal}. Huidige conditie: kan nu comfortabel ${currentDist}km lopen. Week 1 mag maximaal ${weekOneMax}km als langste duurloop hebben. Bouw geleidelijk op over ${totalWeeks} weken naar het doel. ${profile.cycling==='ja'?'Voeg fietstrainingen toe.':''} Exact ${profile.days} trainingsdagen per week. Max hartslag: ${profile.mhr||180} spm (zone 2 = ${Math.round((profile.mhr||180)*.6)}-${Math.round((profile.mhr||180)*.7)} spm). Pas het schema aan op de huidige conditie, niet op het niveau label.
+  const totalWeeks=profile.weeks||12;
+  const weekOneMax=Math.round(currentDist*1.1);
 
-Geef ALLEEN deze JSON structuur terug, geen andere tekst, geen markdown:
-[{"week":1,"focus":"Opbouw","km":15,"dagen":[{"dag":"ma","type":"run","omschrijving":"Duurloop 5km zone 2","wu":"5 min wandelen als warming up","hw":"5km in zone 2, tempo 6:30 min/km, hartslag ${Math.round((profile.mhr||180)*.65)} spm. Praten moet mogelijk blijven.","cd":"5 min wandelen + stretchen kuit en hamstring."},{"dag":"di","type":"rest","omschrijving":"Rust","wu":"","hw":"Rust of 20 min wandelen.","cd":""},{"dag":"wo","type":"run","omschrijving":"Intervallen 6x400m","wu":"10 min rustig inlopen in zone 2.","hw":"6x400m in 5:00 min/km (${Math.round((profile.mhr||180)*.88)} spm). Na elke 400m: 90 sec rustig stappen.","cd":"10 min uitlopen + stretchen."},{"dag":"do","type":"rest","omschrijving":"Rust","wu":"","hw":"Rust. Benen mogen zwaar aanvoelen, dat is normaal.","cd":""},{"dag":"vr","type":"run","omschrijving":"Tempoduur 4km","wu":"5 min wandelen + 5 min rustig lopen.","hw":"4km in zone 3, tempo 5:45 min/km, ${Math.round((profile.mhr||180)*.75)} spm.","cd":"5 min uitlopen + stretchen."},{"dag":"za","type":"rest","omschrijving":"Rust","wu":"","hw":"Rust. Drink extra water, slaap goed.","cd":""},{"dag":"zo","type":"rest","omschrijving":"Rust","wu":"","hw":"Rust.","cd":""}]}]
+  const sys="Je bent loopcoach. Geef uitsluitend valide JSON terug voor 1 week. Geen markdown, geen uitleg. In alle tekstwaarden: gebruik NOOIT apostrofs of aanhalingstekens. Schrijf min/km als min-km.";
 
-Regels:
-- type is alleen: run, bike, of rest
-- omschrijving max 40 tekens, geen aanhalingstekens of speciale tekens
-- wu = warming up tekst (leeg bij rust)
-- hw = hoofdwerk tekst met tempo en hartslag
-- cd = cooling down tekst (leeg bij rust)
-- alle velden: geen aanhalingstekens, geen backslashes, gewone tekst
-- gebruik max hartslag ${profile.mhr||180} spm voor berekeningen
-- alle ${totalWeeks} weken, alle 7 dagen`;
+  schema = [];
+  let kmBase = currentDist * 1.2;
 
-  try{
-    const res = await callClaude([{role:'user',content:userprompt}], 2000, sysprompt);
-    
-    // Extract JSON
-    const start = res.indexOf('[');
-    const end = res.lastIndexOf(']');
-    if(start === -1 || end === -1) throw new Error('Geen JSON gevonden. Probeer opnieuw.');
-    
-    let jsonStr = res.substring(start, end+1);
-    
-    // Robust JSON cleaning
-    jsonStr = jsonStr
-      .replace(/,(\s*[}\]])/g, '$1')
-      .replace(/[\u2018\u2019\u2032]/g, '')
-      .replace(/[\u201c\u201d]/g, '"')
-      .replace(/\t/g, ' ')
-      .replace(/\r/g, '');
-    // Fix unescaped apostrophes inside string values
-    // Parse field by field to find and fix broken values
-    try { JSON.parse(jsonStr); } catch(firstErr) {
-      // Try replacing single quotes inside values with escaped version
-      jsonStr = jsonStr.replace(/([a-zA-Z])'([a-zA-Z])/g, "$1$2");
+  for(let w = 1; w <= totalWeeks; w++){
+    btn.textContent=`Week ${w}/${totalWeeks}...`;
+    const kmWeek = Math.round(kmBase);
+    const isRecovery = w % 4 === 0;
+    const kmActual = isRecovery ? Math.round(kmWeek * 0.7) : kmWeek;
+    if(!isRecovery) kmBase *= 1.08;
+
+    const prompt=`Week ${w} van ${totalWeeks}. Doel: ${profile.goal}. Huidige conditie: ${currentDist}km. Max hartslag: ${mhr} spm. Zone2: ${Math.round(mhr*.6)}-${Math.round(mhr*.7)} spm. Zone3: ${Math.round(mhr*.7)}-${Math.round(mhr*.8)} spm. Zone4: ${Math.round(mhr*.8)}-${Math.round(mhr*.9)} spm. ${isRecovery?'Herstelweek: lichter volume.':''} Totaal ca ${kmActual}km hardlopen. ${profile.cycling==='ja'?'1 fietssessie als herstel.':''} Precies ${profile.days} trainingsdagen, rest rustdagen.
+
+Geef JSON voor precies 1 week met 7 dagen:
+{"week":${w},"focus":"korte weekbeschrijving","km":${kmActual},"dagen":[{"dag":"ma","type":"run","omschrijving":"Duurloop 5km","wu":"5 min wandelen","hw":"5km zone2 tempo 6-30 min-km hartslag ${Math.round(mhr*.65)} spm","cd":"5 min wandelen stretchen"},{"dag":"di","type":"rest","omschrijving":"Rust","wu":"","hw":"Rust of wandelen","cd":""}]}
+
+Regels: type alleen run bike rest. Omschrijving max 35 tekens. Geen apostrofs. Geen aanhalingstekens in tekst. Alle 7 dagen invullen.`;
+
+    try{
+      const res = await callClaude([{role:'user',content:prompt}], 800, sys);
+      const s = res.indexOf('{');
+      const e = res.lastIndexOf('}');
+      if(s===-1||e===-1) throw new Error('Geen JSON');
+      let js = res.substring(s, e+1);
+      // Aggressive cleaning
+      js = js
+        .replace(/,(\s*[}\]])/g,'$1')
+        .replace(/[\u2018\u2019\u2032\u0060]/g,'')
+        .replace(/[\u201c\u201d]/g,'"')
+        .replace(/\t/g,' ')
+        .replace(/\r/g,'');
+      // Remove apostrophes inside words
+      js = js.replace(/([a-zA-Z])'([a-zA-Z])/g,'$1$2');
+      const wkData = JSON.parse(js);
+      const normalized = {
+        week: w,
+        focus: String(wkData.focus||`Week ${w}`).replace(/['"]/g,''),
+        km_totaal: Number(wkData.km||wkData.km_totaal||kmActual),
+        dagen: (wkData.dagen||[]).map(d=>({
+          dag: String(d.dag||'?').substring(0,2),
+          type: ['run','bike','rest'].includes(d.type)?d.type:'rest',
+          beschrijving: String(d.omschrijving||d.beschrijving||d.type||'').replace(/['"]/g,'').substring(0,50),
+          detail: buildDetail(d)
+        }))
+      };
+      schema.push(normalized);
+    }catch(e){
+      console.error(`Week ${w} fout:`,e.message);
+      // Push placeholder so schema stays aligned
+      schema.push({week:w,focus:`Week ${w}`,km_totaal:kmActual,dagen:DAYS.map(dag=>({dag,type:'rest',beschrijving:'Rust',detail:''}))});
     }
+  }
+
+  localStorage.setItem('rc_schema',JSON.stringify(schema));
+  W=totalWeeks;
+  renderSchema();
+  renderToday();
+  btn.textContent='⟳ Genereer';btn.disabled=false;
+}
+
 
     let raw;
     try {

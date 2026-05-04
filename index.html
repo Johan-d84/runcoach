@@ -1013,11 +1013,18 @@ document.getElementById('sync-now-btn')?.addEventListener('click',async()=>{
   const btn=document.getElementById('sync-now-btn');
   const msg=document.getElementById('sync-msg');
   btn.textContent='↻ Bezig...';btn.disabled=true;
-  await syncToCloud();
-  const ok=await syncFromCloud();
+  const uploadOk = await syncToCloud();
+  const downloadOk = await syncFromCloud();
   btn.textContent='↻ Nu synchroniseren';btn.disabled=false;
-  msg.textContent=ok?'✅ Gesynchroniseerd om '+new Date().toLocaleTimeString('nl-NL'):'⚠️ Sync mislukt';
-  renderToday();renderSchema();renderProfile();
+  const uid = getUserId();
+  if(downloadOk) {
+    msg.textContent='✅ Gesynchroniseerd om '+new Date().toLocaleTimeString('nl-NL');
+    renderToday();renderSchema();renderProfile();
+  } else if(uploadOk) {
+    msg.textContent='✅ Opgeslagen in cloud (nog geen data van andere apparaten)';
+  } else {
+    msg.textContent='⚠️ Sync mislukt. User ID: '+uid;
+  }
 });
 document.getElementById('reset-btn').addEventListener('click',()=>{if(confirm('Alle data wissen?')){localStorage.clear();location.reload();}});
 
@@ -1068,7 +1075,7 @@ async function syncToCloud() {
     updated_at: new Date().toISOString()
   };
   try {
-    await fetch(`${SB_URL}/rest/v1/${SB_TABLE}`, {
+    const r = await fetch(`${SB_URL}/rest/v1/${SB_TABLE}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -1078,8 +1085,15 @@ async function syncToCloud() {
       },
       body: JSON.stringify(data)
     });
+    if(!r.ok) {
+      const err = await r.text();
+      console.warn('Supabase upload fout:', r.status, err);
+      return false;
+    }
+    return true;
   } catch(e) {
     console.warn('Sync naar cloud mislukt:', e.message);
+    return false;
   }
 }
 
@@ -1089,8 +1103,16 @@ async function syncFromCloud() {
     const r = await fetch(`${SB_URL}/rest/v1/${SB_TABLE}?user_id=eq.${userId}&select=*`, {
       headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
     });
+    if(!r.ok) {
+      const err = await r.text();
+      console.warn('Supabase fout:', r.status, err);
+      return false;
+    }
     const rows = await r.json();
-    if (!rows || !rows.length) return false;
+    if (!rows || !rows.length) {
+      console.log('Geen data in cloud voor user:', userId);
+      return false;
+    }
     const d = rows[0];
     if (d.profile) localStorage.setItem('rc_profile', JSON.stringify(d.profile));
     if (d.schema) localStorage.setItem('rc_schema', JSON.stringify(d.schema));

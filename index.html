@@ -181,11 +181,23 @@ textarea{overflow:hidden}
   <div class="setup-section"><label class="setup-label">Anthropic API Key</label><input class="setup-input" type="password" id="setup-api" placeholder="sk-ant-api03-..."></div>
   <div class="setup-section"><label class="setup-label">Jouw naam</label><input class="setup-input" type="text" id="setup-name" placeholder="Naam"></div>
 
-  <div class="setup-section"><label class="setup-label">Niveau</label><div class="setup-options three"><button class="opt-btn active" data-group="run-level" data-val="beginner">Beginner</button><button class="opt-btn" data-group="run-level" data-val="gevorderd">Gevorderd</button><button class="opt-btn" data-group="run-level" data-val="ervaren">Ervaren</button></div></div>
+  <div class="setup-section"><label class="setup-label">Niveau</label><div class="setup-options three"><button class="opt-btn active" data-group="run-level" data-val="beginner">Beginner<br><span style="font-size:9px;opacity:.7">0-5km</span></button><button class="opt-btn" data-group="run-level" data-val="intermediate">Intermediate<br><span style="font-size:9px;opacity:.7">5-15km</span></button><button class="opt-btn" data-group="run-level" data-val="gevorderd">Gevorderd<br><span style="font-size:9px;opacity:.7">15km+</span></button></div></div>
   <div class="setup-section"><label class="setup-label">Doel</label><div class="setup-options"><button class="opt-btn active" data-group="goal" data-val="5km opbouwen">5km opbouwen</button><button class="opt-btn" data-group="goal" data-val="10km lopen">10km lopen</button><button class="opt-btn" data-group="goal" data-val="halve marathon">Halve marathon</button><button class="opt-btn" data-group="goal" data-val="marathon">Marathon</button><button class="opt-btn" data-group="goal" data-val="fitter worden">Fitter worden</button></div></div>
   <div class="setup-section"><label class="setup-label">Fietsen meenemen?</label><div class="setup-options"><button class="opt-btn active" data-group="cycling" data-val="ja">Ja, fietsen ook</button><button class="opt-btn" data-group="cycling" data-val="nee">Nee, alleen lopen</button></div></div>
   <div class="setup-section"><label class="setup-label">Trainingsdagen/week</label><div class="setup-options three"><button class="opt-btn" data-group="days" data-val="3">3×</button><button class="opt-btn active" data-group="days" data-val="4">4×</button><button class="opt-btn" data-group="days" data-val="5">5×</button></div></div>
+  <div class="setup-section"><label class="setup-label">Aantal weken schema</label><div class="setup-options"><button class="opt-btn" data-group="weeks" data-val="8">8 weken</button><button class="opt-btn active" data-group="weeks" data-val="12">12 weken</button><button class="opt-btn" data-group="weeks" data-val="16">16 weken</button><button class="opt-btn" data-group="weeks" data-val="20">20 weken</button></div></div>
   <div class="setup-section"><label class="setup-label">Gewicht & lengte</label><div class="setup-row"><input class="setup-input" type="number" id="setup-weight" placeholder="kg"><input class="setup-input" type="number" id="setup-height" placeholder="cm"></div></div>
+  <div class="setup-section"><label class="setup-label">Huidige conditie</label>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Hoe ver kun je nu comfortabel lopen?</div>
+    <div class="setup-options t3">
+      <button class="opt-btn" data-group="current-dist" data-val="2">~2 km</button>
+      <button class="opt-btn" data-group="current-dist" data-val="5">~5 km</button>
+      <button class="opt-btn active" data-group="current-dist" data-val="10">~10 km</button>
+      <button class="opt-btn" data-group="current-dist" data-val="15">~15 km</button>
+      <button class="opt-btn" data-group="current-dist" data-val="21">~21 km</button>
+      <button class="opt-btn" data-group="current-dist" data-val="30">30+ km</button>
+    </div>
+  </div>
   <div class="setup-section"><label class="setup-label">Leeftijd & max hartslag</label><div class="setup-row"><input class="setup-input" type="number" id="setup-age" placeholder="Leeftijd"><input class="setup-input" type="number" id="setup-mhr" placeholder="Max hartslag (opt.)"></div><div style="font-size:11px;color:var(--muted);margin-top:5px">Max hartslag wordt berekend als 220 minus leeftijd als je het leeg laat.</div></div>
   <button class="start-btn" id="start-btn">Start met trainen →</button>
 </div>
@@ -227,6 +239,7 @@ textarea{overflow:hidden}
       <div class="card-header">
         <div class="card-title">Trainingsschema</div>
         <div style="display:flex;gap:6px">
+          <button class="day-btn" id="export-schema-btn" style="border-color:var(--accent2);color:var(--accent2)">⬇ Garmin</button>
           <button class="day-btn" id="edit-schema-btn" style="border-color:var(--accent3);color:var(--accent3)">✏️</button>
           <button class="day-btn" id="generate-schema-btn" style="border-color:var(--accent);color:var(--accent)">⟳ Genereer</button>
         </div>
@@ -387,6 +400,7 @@ textarea{overflow:hidden}
     <textarea class="modal-input" id="log-input" placeholder="Hoe ging het? (bv: 5.2km, 28:30, hartslag 148)"></textarea>
     <button class="modal-btn" id="log-submit-btn">Loggen & AI feedback</button>
     <button class="modal-btn-out" id="log-skip-btn">Alleen afvinken</button>
+  <button class="modal-btn-out" id="log-missed-btn" style="color:var(--danger);border-color:var(--danger);margin-top:6px">⚠️ Training gemist — schema aanpassen</button>
   </div>
 </div>
 
@@ -411,6 +425,92 @@ let profile=null,schema=null,currentWeek=1,chatHistory=[],logTargetDay=null,logT
 let importedActivities=[],stravaToken=null,charts={};
 const WEEKS=8,DAYS=['ma','di','wo','do','vr','za','zo'];
 
+
+// ── GARMIN EXPORT ──
+function exportWeekToGarmin(weekNr) {
+  const wk = schema?.[weekNr - 1];
+  if (!wk) { alert('Geen schema voor week ' + weekNr); return; }
+
+  const mhr = profile?.mhr || 180;
+  const zones = calcHRZones(mhr);
+
+  // Build a structured workout description per training day
+  const trainings = wk.dagen.filter(d => d.type !== 'rest');
+
+  // Export as TCX Workout XML — Garmin Connect can import this
+  const tcxWorkouts = trainings.map(d => {
+    const zone = d.omschrijving?.toLowerCase().includes('zone 1') ? zones[0] :
+                 d.omschrijving?.toLowerCase().includes('zone 2') ? zones[1] :
+                 d.omschrijving?.toLowerCase().includes('zone 3') ? zones[2] :
+                 d.omschrijving?.toLowerCase().includes('zone 4') ? zones[3] :
+                 d.omschrijving?.toLowerCase().includes('zone 5') ? zones[4] : zones[1];
+
+    return `  <Workout Sport="${d.type === 'bike' ? 'Biking' : 'Running'}">
+    <Name>Week ${weekNr} ${d.dag} - ${(d.omschrijving||'').replace(/&/g,'&amp;')}</Name>
+    <Step xsi:type="Step_t">
+      <StepId>1</StepId>
+      <Name>${(d.omschrijving||'').replace(/&/g,'&amp;')}</Name>
+      <Duration xsi:type="UserInitiated_t"/>
+      <Intensity>Active</Intensity>
+      <Target xsi:type="HeartRate_t">
+        <HeartRateZone xsi:type="PredefinedHeartRateZone_t">
+          <Number>2</Number>
+        </HeartRateZone>
+      </Target>
+    </Step>
+    <ScheduledOn>${getDateForDay(d.dag)}</ScheduledOn>
+  </Workout>`;
+  }).join('
+');
+
+  const tcx = `<?xml version="1.0" encoding="UTF-8"?>
+<TrainingCenterDatabase
+  xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2 http://www.garmin.com/xmlschemas/TrainingCenterDatabasev2.xsd">
+  <Workouts>
+${tcxWorkouts}
+  </Workouts>
+</TrainingCenterDatabase>`;
+
+  // Also create a readable text version
+  const txtLines = [
+    `RunCoach — Week ${weekNr} trainingsschema`,
+    `Doel: ${profile?.goal} | Max hartslag: ${mhr} spm`,
+    '',
+    ...trainings.map(d => {
+      const zone = zones.find(z => d.omschrijving?.toLowerCase().includes('zone '+z.nr)) || zones[1];
+      return `${d.dag.toUpperCase()}: ${d.omschrijving}
+   Hartslag: ${zone.min}-${zone.max} spm (${zone.pct})`;
+    }),
+    '',
+    'Hartslagzones:',
+    ...zones.map(z => `  Zone ${z.nr}: ${z.min}-${z.max} spm (${z.pct}) — ${z.naam.split('—')[1]?.trim()}`)
+  ];
+
+  // Download both files
+  downloadFile(`runcoach_week${weekNr}.tcx`, tcx, 'application/xml');
+  setTimeout(() => downloadFile(`runcoach_week${weekNr}.txt`, txtLines.join('
+'), 'text/plain'), 500);
+}
+
+function getDateForDay(dagCode) {
+  const today = new Date();
+  const dayIdx = DAYS.indexOf(dagCode);
+  const todayIdx = today.getDay() === 0 ? 6 : today.getDay() - 1;
+  const diff = dayIdx - todayIdx;
+  const target = new Date(today);
+  target.setDate(today.getDate() + diff);
+  return target.toISOString().substring(0, 10);
+}
+
+function downloadFile(filename, content, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
 async function init(){
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
   checkStravaCallback();
@@ -470,6 +570,7 @@ async function loadProfile(userId){
   const s=localStorage.getItem('rc_profile');
   if(!s){statusEl.textContent='Geen profieldata gevonden';return;}
   profile=JSON.parse(s);
+  W=profile.weeks||12;
   schema=JSON.parse(localStorage.getItem('rc_schema')||'null');
   chatHistory=JSON.parse(localStorage.getItem('rc_chat')||'[]');
   importedActivities=JSON.parse(localStorage.getItem('rc_activities')||'[]');
@@ -514,8 +615,9 @@ document.getElementById('start-btn').addEventListener('click',async()=>{
   localStorage.setItem('rc_userid',newId);
   const _age=parseInt(document.getElementById('setup-age')?.value)||30;
   const _mhr=parseInt(document.getElementById('setup-mhr')?.value)||(220-_age);
-  profile={apiKey:k,name:document.getElementById('setup-name').value.trim()||'Atleet',runLevel:document.querySelector('[data-group="run-level"].active')?.dataset.val||'beginner',goal:document.querySelector('[data-group="goal"].active')?.dataset.val||'5km opbouwen',cycling:document.querySelector('[data-group="cycling"].active')?.dataset.val||'ja',days:parseInt(document.querySelector('[data-group="days"].active')?.dataset.val||'4'),weight:document.getElementById('setup-weight').value||'75',height:document.getElementById('setup-height').value||'175',age:_age,mhr:_mhr,startDate:new Date().toISOString()};
+  profile={apiKey:k,name:document.getElementById('setup-name').value.trim()||'Atleet',runLevel:document.querySelector('[data-group="run-level"].active')?.dataset.val||'beginner',currentDist:parseInt(document.querySelector('[data-group="current-dist"].active')?.dataset.val||'5'),goal:document.querySelector('[data-group="goal"].active')?.dataset.val||'5km opbouwen',cycling:document.querySelector('[data-group="cycling"].active')?.dataset.val||'ja',days:parseInt(document.querySelector('[data-group="days"].active')?.dataset.val||'4'),weeks:parseInt(document.querySelector('[data-group="weeks"].active')?.dataset.val||'12'),weight:document.getElementById('setup-weight').value||'75',height:document.getElementById('setup-height').value||'175',age:_age,mhr:_mhr,startDate:new Date().toISOString()};
   localStorage.setItem('rc_profile',JSON.stringify(profile));
+  W=profile.weeks||12;
   await syncToCloud();
   document.getElementById('setup-screen').style.display='none';
   document.getElementById('app').style.display='block';
@@ -633,6 +735,10 @@ function logFeeling(feel,btn){
   switchTo('coach');addBubble('user',msgs[feel]);askCoach(msgs[feel]);
 }
 
+document.getElementById('export-schema-btn')?.addEventListener('click',()=>{
+  if(!schema){alert('Genereer eerst een schema.');return;}
+  exportWeekToGarmin(currentWeek);
+});
 document.getElementById('generate-schema-btn').addEventListener('click',generateSchema);
 async function generateSchema(){
   const btn=document.getElementById('generate-schema-btn');
@@ -644,14 +750,17 @@ async function generateSchema(){
 
   // Simple prompt - NO detail field to avoid JSON parse errors
   const sysprompt = "Je bent een loopcoach. Geef altijd alleen valide JSON terug. Geen uitleg, geen markdown, geen code blocks. Geen speciale tekens of aanhalingstekens binnen tekstwaarden.";
-  const userprompt = `Maak een 8-weken trainingsschema voor een ${profile.runLevel} loper met doel: ${profile.goal}. ${profile.cycling==='ja'?'Voeg fietstrainingen toe.':''} Exact ${profile.days} trainingsdagen per week. Max hartslag atleet: ${profile.mhr||180} spm. Noem hartslagzones in de omschrijving waar relevant (zone 2 = ${Math.round((profile.mhr||180)*.6)}-${Math.round((profile.mhr||180)*.7)} spm).
+  const currentDist=profile.currentDist||10;
+const weekOneMax=Math.round(currentDist*1.1);
+const totalWeeks=profile.weeks||12;
+const userprompt = `Maak een ${totalWeeks}-weken trainingsschema voor een loper met doel: ${profile.goal}. Huidige conditie: kan nu comfortabel ${currentDist}km lopen. Week 1 mag maximaal ${weekOneMax}km als langste duurloop hebben. Bouw geleidelijk op over ${totalWeeks} weken naar het doel. ${profile.cycling==='ja'?'Voeg fietstrainingen toe.':''} Exact ${profile.days} trainingsdagen per week. Max hartslag: ${profile.mhr||180} spm (zone 2 = ${Math.round((profile.mhr||180)*.6)}-${Math.round((profile.mhr||180)*.7)} spm). Pas het schema aan op de huidige conditie, niet op het niveau label.
 
 Geef ALLEEN deze JSON structuur terug:
 [{"week":1,"focus":"Opbouw","km":15,"dagen":[{"dag":"ma","type":"run","omschrijving":"Duurloop 5km"},{"dag":"di","type":"rest","omschrijving":"Rust"},{"dag":"wo","type":"run","omschrijving":"Intervallen"},{"dag":"do","type":"rest","omschrijving":"Rust"},{"dag":"vr","type":"run","omschrijving":"Tempo 4km"},{"dag":"za","type":"rest","omschrijving":"Rust"},{"dag":"zo","type":"rest","omschrijving":"Rust"}]}]
 
 Regels:
 - type is alleen: run, bike, of rest
-- omschrijving is maximaal 30 tekens
+- omschrijving maximaal 40 tekens
 - geen aanhalingstekens in omschrijving
 - alle 8 weken, alle 7 dagen`;
 
@@ -680,6 +789,7 @@ Regels:
     }
 
     if(!Array.isArray(raw) || raw.length === 0) throw new Error('Ongeldig schema ontvangen.');
+    W=profile.weeks||12;
 
     // Normalize to consistent structure
     schema = raw.map((wk, i) => ({
@@ -717,7 +827,8 @@ function renderSchema(){
     `<div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-style:italic;line-height:1.5">${wk.focus||''}</div>`+
     wk.dagen.map(d=>{
       const done=!!wl[d.dag];
-      const tc=done?'dot-done':`dot-${d.type}`;
+      const missed=!!(JSON.parse(localStorage.getItem('rc_logs')||'{}')[`w${currentWeek}`]||{})[d.dag]?.missed;
+const tc=done?'dot-done':missed?'dot-rest':`dot-${d.type}`;
       const tg=done?'tag-done':`tag-${d.type}`;
       return `<div class="day-row">
         <div class="day-dot ${tc}"></div>
@@ -793,6 +904,39 @@ function openLogModal(dag,desc,detail){
   document.getElementById('log-modal').classList.add('open');
 }
 document.getElementById('close-log-modal').addEventListener('click',()=>document.getElementById('log-modal').classList.remove('open'));
+document.getElementById('log-missed-btn')?.addEventListener('click',async()=>{
+  document.getElementById('log-modal').classList.remove('open');
+  // Mark as missed
+  const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
+  const key=`w${currentWeek}`;
+  if(!logs[key])logs[key]={};
+  logs[key][logTargetDay]={missed:true,ts:Date.now()};
+  localStorage.setItem('rc_logs',JSON.stringify(logs));
+  renderSchema();renderToday();
+  // Ask AI to reschedule
+  goTo('coach');
+  const wk=schema?.[currentWeek-1];
+  const dag=wk?.dagen?.find(d=>d.dag===logTargetDay);
+  addBubble('user',`Ik heb mijn training van ${logTargetDay} gemist (${dag?.beschrijving||''}). Pas mijn schema aan voor de rest van de week.`);
+  await askCoachReschedule(logTargetDay, dag?.beschrijving||'');
+});
+
+async function askCoachReschedule(dag, training) {
+  showTyping();
+  const wk=schema?.[currentWeek-1];
+  const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
+  const wl=logs[`w${currentWeek}`]||{};
+  const resterendeDagen=wk?.dagen?.filter(d=>!wl[d.dag]&&d.dag!==dag&&d.type!=='rest')||[];
+
+  const sys=`Je bent RunCoach, coach voor ${profile.name}. Geef praktisch advies over het aanpassen van het trainingsschema na een gemiste training. Wees kort en positief.`;
+  const msg=`Training gemist op ${dag}: ${training}. Resterende trainingsdagen deze week: ${resterendeDagen.map(d=>d.dag+' ('+d.beschrijving+')').join(', ')||'geen'}. Geef concreet advies: wat te schrappen of verzwaren, en hoe te compenseren. Max 3 zinnen.`;
+
+  try{
+    const r=await callClaude([{role:'user',content:msg}],300,sys);
+    hideTyping();addBubble('ai',r);
+  }catch(e){hideTyping();addBubble('ai','Geen probleem, een gemiste training overkomt iedereen. Ga morgen gewoon verder met het schema.');}
+}
+
 document.getElementById('log-skip-btn').addEventListener('click',()=>{
   document.getElementById('log-modal').classList.remove('open');
   markDone(logTargetDay);renderSchema();renderToday();
@@ -1112,6 +1256,7 @@ function renderProfile(){
   document.getElementById('profile-card').innerHTML=`
     <div class="card-header"><div class="card-title">${profile.name}</div><span class="badge badge-yellow">${profile.runLevel}</span></div>
     <div style="display:flex;flex-direction:column;gap:9px;font-size:13px">
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Huidige afstand</span><span>${profile.currentDist||"?"}km</span></div>
       <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Doel</span><span>${profile.goal}</span></div>
       <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Fietsen</span><span>${profile.cycling==='ja'?'Ja':'Nee'}</span></div>
       <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Trainingsdagen</span><span>${profile.days}× per week</span></div>

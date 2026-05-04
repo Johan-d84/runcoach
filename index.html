@@ -238,7 +238,6 @@ textarea{overflow:hidden}
       <div class="card-header">
         <div class="card-title">Trainingsschema</div>
         <div style="display:flex;gap:6px">
-          <button class="day-btn" id="export-schema-btn" style="border-color:var(--accent2);color:var(--accent2)">⬇ Garmin</button>
           <button class="day-btn" id="edit-schema-btn" style="border-color:var(--accent3);color:var(--accent3)">✏️</button>
           <button class="day-btn" id="delete-schema-btn" style="border-color:var(--danger);color:var(--danger)">🗑</button>
           <button class="day-btn" id="generate-schema-btn" style="border-color:var(--accent);color:var(--accent)">⟳ Genereer</button>
@@ -494,91 +493,7 @@ let WEEKS=8,DAYS=['ma','di','wo','do','vr','za','zo'];
 
 
 
-// ── GARMIN EXPORT ──
-function exportWeekToGarmin(weekNr) {
-  const wk = schema?.[weekNr - 1];
-  if (!wk) { alert('Geen schema voor week ' + weekNr); return; }
-  const mhr = profile?.mhr || 180;
-  const zones = calcHRZones(mhr);
-  const trainings = wk.dagen.filter(d => d.type !== 'rest');
 
-  const txtLines = [
-    'RunCoach - Week ' + weekNr + ' trainingsschema',
-    'Doel: ' + (profile?.goal||'') + ' | Max hartslag: ' + mhr + ' spm',
-    '',
-  ];
-  trainings.forEach(d => {
-    const zoneNr = d.omschrijving && d.omschrijving.toLowerCase().includes('zone') ?
-      parseInt(d.omschrijving.match(/zone\s*(\d)/i)?.[1]||'2') : 2;
-    const zone = zones[Math.min(zoneNr-1, zones.length-1)] || zones[1];
-    txtLines.push(d.dag.toUpperCase() + ': ' + (d.omschrijving||''));
-    txtLines.push('   Hartslag: ' + zone.min + '-' + zone.max + ' spm (' + zone.pct + ')');
-    txtLines.push('');
-  });
-  txtLines.push('Hartslagzones:');
-  zones.forEach(z => {
-    txtLines.push('  Zone ' + z.nr + ': ' + z.min + '-' + z.max + ' spm (' + z.pct + ') - ' + (z.naam.split('—')[1]||'').trim());
-  });
-
-  downloadFile('runcoach_week' + weekNr + '.txt', txtLines.join('\n'), 'text/plain');
-}
-
-function getDateForDay(dagCode) {
-  const today = new Date();
-  const dayIdx = DAYS.indexOf(dagCode);
-  const todayIdx = today.getDay() === 0 ? 6 : today.getDay() - 1;
-  const diff = dayIdx - todayIdx;
-  const target = new Date(today);
-  target.setDate(today.getDate() + diff);
-  return target.toISOString().substring(0, 10);
-}
-
-function downloadFile(filename, content, mimeType) {
-  const blob = new Blob([content], { type: mimeType });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = filename; a.click();
-  URL.revokeObjectURL(url);
-}
-
-function openGenerateModal() {
-  const p = profile || {};
-  // Pre-select current profile values
-  const presets = {
-    'gen-goal': p.goal || '10km lopen',
-    'gen-dist': String(p.currentDist || '10'),
-    'gen-days': String(p.days || '4'),
-    'gen-weeks': String(p.weeks || '12'),
-    'gen-cyc': p.cycling || 'nee'
-  };
-  Object.entries(presets).forEach(([g, v]) => {
-    document.querySelectorAll(`[data-g="${g}"]`).forEach(b => {
-      b.classList.toggle('active', b.dataset.v === v);
-    });
-  });
-  document.getElementById('gen-modal').classList.add('open');
-}
-
-document.querySelectorAll('#gen-modal .opt-btn').forEach(b => {
-  b.addEventListener('click', () => {
-    document.querySelectorAll(`[data-g="${b.dataset.g}"]`).forEach(x => x.classList.remove('active'));
-    b.classList.add('active');
-  });
-});
-
-document.getElementById('gen-confirm-btn').addEventListener('click', () => {
-  const gv = g => document.querySelector(`[data-g="${g}"].active`)?.dataset.v;
-  // Update profile with new settings
-  profile.goal = gv('gen-goal') || profile.goal;
-  profile.currentDist = parseInt(gv('gen-dist') || profile.currentDist || 10);
-  profile.days = parseInt(gv('gen-days') || profile.days || 4);
-  profile.weeks = parseInt(gv('gen-weeks') || profile.weeks || 12);
-  profile.cycling = gv('gen-cyc') || profile.cycling;
-  W = profile.weeks;
-  localStorage.setItem('rc_profile', JSON.stringify(profile));
-  document.getElementById('gen-modal').classList.remove('open');
-  generateSchema();
-});
 
 async function init(){
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
@@ -866,10 +781,6 @@ document.getElementById('delete-schema-btn')?.addEventListener('click',()=>{
   document.getElementById('schema-list').innerHTML='<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">Druk op Genereer voor je persoonlijk schema</div>';
   document.getElementById('streak-card').style.display='none';
   renderToday();
-});
-document.getElementById('export-schema-btn')?.addEventListener('click',()=>{
-  if(!schema){alert('Genereer eerst een schema.');return;}
-  exportWeekToGarmin(currentWeek);
 });
 document.getElementById('generate-schema-btn').addEventListener('click',openGenerateModal);
 function buildDetail(d) {

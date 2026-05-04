@@ -722,13 +722,24 @@ const totalWeeks=profile.weeks||12;
 const userprompt = `Maak een ${totalWeeks}-weken trainingsschema voor een loper met doel: ${profile.goal}. Huidige conditie: kan nu comfortabel ${currentDist}km lopen. Week 1 mag maximaal ${weekOneMax}km als langste duurloop hebben. Bouw geleidelijk op over ${totalWeeks} weken naar het doel. ${profile.cycling==='ja'?'Voeg fietstrainingen toe.':''} Exact ${profile.days} trainingsdagen per week. Max hartslag: ${profile.mhr||180} spm (zone 2 = ${Math.round((profile.mhr||180)*.6)}-${Math.round((profile.mhr||180)*.7)} spm). Pas het schema aan op de huidige conditie, niet op het niveau label.
 
 Geef ALLEEN deze JSON structuur terug, geen andere tekst:
-[{"week":1,"focus":"Opbouw","km":15,"dagen":[{"dag":"ma","type":"run","omschrijving":"Duurloop 5km","instructie":"Loop 5km in zone 2. Tempo ca 6:30 min/km. Hartslag ${Math.round((profile.mhr||180)*.65)} spm. Warm op 5 min wandelen."},{"dag":"di","type":"rest","omschrijving":"Rust","instructie":"Rust. Eventueel licht stretchen."},{"dag":"wo","type":"run","omschrijving":"Intervallen 6x400m","instructie":"Warming up 10 min. Dan 6x400m in 5:00 min/km (${Math.round((profile.mhr||180)*.88)} spm), 90 sec rust ertussen. Cooling down 10 min."},{"dag":"do","type":"rest","omschrijving":"Rust","instructie":"Rust."},{"dag":"vr","type":"run","omschrijving":"Tempoduur 4km","instructie":"4km in zone 3, tempo 5:45 min/km, hartslag ${Math.round((profile.mhr||180)*.75)} spm."},{"dag":"za","type":"rest","omschrijving":"Rust","instructie":"Rust."},{"dag":"zo","type":"rest","omschrijving":"Rust","instructie":"Rust."}]}]
+[{"week":1,"focus":"Opbouw","km":15,"dagen":[
+{"dag":"ma","type":"run","omschrijving":"Duurloop 5km zone 2","instructie":"Warming up: 5 min wandelen.\nHoofdwerk: 5km rustige duurloop in zone 2, tempo 6:30 min/km, hartslag ${Math.round((profile.mhr||180)*.65)} spm. Praten moet mogelijk blijven.\nCooling down: 5 min wandelen + 5 min stretchen (kuit, hamstring, heupbuiger)."},
+{"dag":"di","type":"rest","omschrijving":"Rust & herstel","instructie":"Volledige rust of actief herstel: 20 min rustig wandelen. Foam rol je benen 10 min. Drink voldoende water."},
+{"dag":"wo","type":"run","omschrijving":"Intervallen 6x400m","instructie":"Warming up: 10 min rustig inlopen zone 2.\nHoofdwerk: 6x400m in tempo 5:00 min/km (hartslag ${Math.round((profile.mhr||180)*.88)} spm). Na elke 400m: 90 sec actieve rust (rustig stappen).\nCooling down: 10 min rustig uitlopen + stretchen."},
+{"dag":"do","type":"rest","omschrijving":"Rust","instructie":"Rust. Benen mogen zwaar aanvoelen na de intervallen van gisteren, dat is normaal."},
+{"dag":"vr","type":"run","omschrijving":"Tempoduur 4km","instructie":"Warming up: 5 min wandelen + 5 min rustig lopen.\nHoofdwerk: 4km in zone 3, tempo 5:45 min/km, hartslag ${Math.round((profile.mhr||180)*.75)} spm. Comfortabel hard, je kunt nog net praten.\nCooling down: 5 min rustig uitlopen + stretchen."},
+{"dag":"za","type":"rest","omschrijving":"Rust","instructie":"Rust of lichte wandeling. Goede voorbereiding voor de lange duurloop morgen: drink extra water, slaap goed."},
+{"dag":"zo","type":"rest","omschrijving":"Rust","instructie":"Rust."}
+]}]
 
 Regels:
 - type is alleen: run, bike, of rest
 - omschrijving max 40 tekens, geen aanhalingstekens
-- instructie max 120 tekens: vermeld altijd tempo in min/km EN hartslag in spm
-- gebruik de max hartslag ${profile.mhr||180} spm voor berekening van zones
+- instructie: schrijf ALTIJD drie onderdelen: Warming up, Hoofdwerk, Cooling down
+- vermeld bij elk onderdeel het exacte tempo in min/km EN hartslag in spm
+- gebruik \n voor regeleindes binnen instructie
+- gebruik de max hartslag ${profile.mhr||180} spm voor hartslagberekeningen
+- instructie mag lang zijn, wees volledig en concreet
 - alle ${totalWeeks} weken, alle 7 dagen`;
 
   try{
@@ -876,7 +887,7 @@ function openDetailModal(dag){
   const z=zns[Math.min(zn-1,zns.length-1)]||zns[1];
   document.getElementById('detail-modal-body').innerHTML=`
     <span class="tag tag-${d.type}" style="margin-bottom:12px;display:inline-block">${d.type}</span>
-    <div style="font-size:14px;line-height:1.8;color:var(--text);margin-bottom:12px;white-space:pre-line">${detTxt}</div>
+    <div style="font-size:13px;line-height:1.9;color:var(--text);margin-bottom:12px">${detTxt.replace(/Warming up:/g,'<strong style=\"color:var(--accent2)\">🏃 Warming up:</strong>').replace(/Hoofdwerk:/g,'<strong style=\"color:var(--accent)\">⚡ Hoofdwerk:</strong>').replace(/Cooling down:/g,'<strong style=\"color:var(--accent3)\">🧘 Cooling down:</strong>').replace(/\\n/g,'<br>')}</div>
     <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;font-size:13px;display:flex;gap:20px">
       <div>&#x1F493; <strong>${z.min}&ndash;${z.max} spm</strong> <span style="color:var(--muted)">(${z.pct})</span></div>
       <div>&#x1F4CA; <strong>${z.naam.split("\u2014")[0].trim()}</strong></div>

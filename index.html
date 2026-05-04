@@ -182,7 +182,7 @@ textarea{overflow:hidden}
 <div id="app">
   <div class="topbar">
     <div class="topbar-logo">RunCoach</div>
-    <div class="topbar-right"><div class="topbar-date" id="topbar-date"></div><span class="badge badge-yellow" id="streak-badge" style="display:none"></span></div>
+    <div class="topbar-right"><div class="topbar-date" id="topbar-date"></div><div id="sync-status" style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace"></div><span class="badge badge-yellow" id="streak-badge" style="display:none"></span></div>
   </div>
 
   <div id="page-today" class="page active">
@@ -309,6 +309,12 @@ textarea{overflow:hidden}
         <button class="modal-btn" id="save-settings-btn" style="margin-top:4px">Instellingen opslaan</button>
       </div>
     </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Synchronisatie</div><span class="badge badge-blue">Cloud</span></div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Je data wordt automatisch gesynchroniseerd. Open de app op een ander apparaat om dezelfde data te zien.</div>
+      <button class="day-btn" id="sync-now-btn" style="width:100%;text-align:center;padding:10px;border-color:var(--accent3);color:var(--accent3)">↻ Nu synchroniseren</button>
+      <div id="sync-msg" style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center"></div>
+    </div>
     <div style="margin-top:12px;text-align:center"><button class="day-btn" id="reset-btn" style="color:var(--danger);border-color:var(--danger)">App resetten</button></div>
   </div>
 
@@ -353,7 +359,10 @@ let profile=null,schema=null,currentWeek=1,chatHistory=[],logTargetDay=null,logT
 let importedActivities=[],stravaToken=null,charts={};
 const WEEKS=8,DAYS=['ma','di','wo','do','vr','za','zo'];
 
-function init(){
+async function init(){
+  // Laad data uit cloud als die er is
+  await syncFromCloud();
+
   const s=localStorage.getItem('rc_profile');if(!s)return;
   profile=JSON.parse(s);
   schema=JSON.parse(localStorage.getItem('rc_schema')||'null');
@@ -964,6 +973,16 @@ document.getElementById('feedback-btn').addEventListener('click',async()=>{
   await askCoach(`Feedback over mijn trainingen: "${txt}". Reageer empathisch, erken mijn ervaring, en stel 1-2 concrete aanpassingen voor.`);
   document.getElementById('feedback-input').value='';
 });
+document.getElementById('sync-now-btn')?.addEventListener('click', async()=>{
+  const btn=document.getElementById('sync-now-btn');
+  const msg=document.getElementById('sync-msg');
+  btn.textContent='↻ Bezig...';btn.disabled=true;
+  await syncToCloud();
+  const ok=await syncFromCloud();
+  btn.textContent='↻ Nu synchroniseren';btn.disabled=false;
+  msg.textContent=ok?'✅ Gesynchroniseerd op '+new Date().toLocaleTimeString('nl-NL'):'⚠️ Sync mislukt';
+  renderToday();renderSchema();renderProfile();
+});
 document.getElementById('reset-btn').addEventListener('click',()=>{if(confirm('Alle data wissen?')){localStorage.clear();location.reload();}});
 
 async function callClaude(messages,maxTokens=800,system=null){
@@ -984,6 +1003,81 @@ async function callClaude(messages,maxTokens=800,system=null){
 }
 
 document.getElementById('chat-input').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';});
+
+
+// ── SUPABASE SYNC ──
+const SB_URL = 'https://ftklgibsqjpmqzyvqyhd.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0a2xnaWJzcWpwbXF6eXZxeWhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4OTA3OTEsImV4cCI6MjA5MzQ2Njc5MX0.bYn_5epzSpI-xZ3ndBqmID8Y_tzW4uxRaHD0EQNwVj4';
+const SB_TABLE = 'runcoach_data';
+
+function getUserId() {
+  let id = localStorage.getItem('rc_userid');
+  if (!id) {
+    id = 'user_' + Math.random().toString(36).substring(2, 12);
+    localStorage.setItem('rc_userid', id);
+  }
+  return id;
+}
+
+async function syncToCloud() {
+  const userId = getUserId();
+  const data = {
+    user_id: userId,
+    profile: JSON.parse(localStorage.getItem('rc_profile') || 'null'),
+    schema: JSON.parse(localStorage.getItem('rc_schema') || 'null'),
+    logs: JSON.parse(localStorage.getItem('rc_logs') || '{}'),
+    feelings: JSON.parse(localStorage.getItem('rc_feelings') || '{}'),
+    activities: JSON.parse(localStorage.getItem('rc_activities') || '[]'),
+    chat: JSON.parse(localStorage.getItem('rc_chat') || '[]'),
+    updated_at: new Date().toISOString()
+  };
+  try {
+    await fetch(`${SB_URL}/rest/v1/${SB_TABLE}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SB_KEY,
+        'Authorization': `Bearer ${SB_KEY}`,
+        'Prefer': 'resolution=merge-duplicates'
+      },
+      body: JSON.stringify(data)
+    });
+  } catch(e) {
+    console.warn('Sync naar cloud mislukt:', e.message);
+  }
+}
+
+async function syncFromCloud() {
+  const userId = getUserId();
+  try {
+    const r = await fetch(`${SB_URL}/rest/v1/${SB_TABLE}?user_id=eq.${userId}&select=*`, {
+      headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
+    });
+    const rows = await r.json();
+    if (!rows || !rows.length) return false;
+    const d = rows[0];
+    if (d.profile) localStorage.setItem('rc_profile', JSON.stringify(d.profile));
+    if (d.schema) localStorage.setItem('rc_schema', JSON.stringify(d.schema));
+    if (d.logs) localStorage.setItem('rc_logs', JSON.stringify(d.logs));
+    if (d.feelings) localStorage.setItem('rc_feelings', JSON.stringify(d.feelings));
+    if (d.activities) localStorage.setItem('rc_activities', JSON.stringify(d.activities));
+    if (d.chat) localStorage.setItem('rc_chat', JSON.stringify(d.chat));
+    return true;
+  } catch(e) {
+    console.warn('Sync van cloud mislukt:', e.message);
+    return false;
+  }
+}
+
+// Auto-sync to cloud after every save
+const _origSetItem = localStorage.setItem.bind(localStorage);
+localStorage.setItem = function(key, value) {
+  _origSetItem(key, value);
+  if (key.startsWith('rc_') && key !== 'rc_userid') {
+    clearTimeout(window._syncTimer);
+    window._syncTimer = setTimeout(syncToCloud, 2000);
+  }
+};
 
 init();
 </script>

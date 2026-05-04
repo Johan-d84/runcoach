@@ -761,7 +761,7 @@ function renderToday(){
   }
   const wk=schema[currentWeek-1];
   const tc=getTodayCode();
-  document.getElementById('week-nr-today').textContent=currentWeek;
+  if(document.getElementById('week-nr-today'))document.getElementById('week-nr-today').textContent=currentWeek;
   const todayDay=wk?.dagen?.find(d=>d.dag===tc);
   const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
   const wl=logs[`w${currentWeek}`]||{};
@@ -779,8 +779,8 @@ function renderToday(){
   const streak=calcStreak();
   document.getElementById('stat-km').textContent=wk?.km_totaal||'—';
   document.getElementById('stat-done').textContent=`${doneCount}/${trainDays.length}`;
-  document.getElementById('stat-streak').textContent=streak;
-  document.getElementById('week-prog').style.width=(doneCount/Math.max(trainDays.length,1)*100)+'%';
+  if(document.getElementById('stat-streak'))document.getElementById('stat-streak').textContent=streak;
+  if(document.getElementById('week-prog'))document.getElementById('week-prog').style.width=(doneCount/Math.max(trainDays.length,1)*100)+'%';
 
   const feelings=JSON.parse(localStorage.getItem('rc_feelings')||'{}');
   const feel=feelings[new Date().toDateString()];

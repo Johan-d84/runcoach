@@ -231,7 +231,7 @@ textarea{overflow:hidden}
   <div id="page-schema" class="page">
     <div class="week-switcher">
       <button class="week-arrow" id="prev-week">‹</button>
-      <div class="week-label" id="week-label">Week 1 van 8</div>
+      <div class="week-label" id="week-label">Week 1</div>
       <button class="week-arrow" id="next-week">›</button>
     </div>
     <div class="card">
@@ -484,7 +484,7 @@ textarea{overflow:hidden}
 <script>
 let profile=null,schema=null,currentWeek=1,chatHistory=[],logTargetDay=null,logTargetDetail=null;
 let importedActivities=[],stravaToken=null,charts={};
-const WEEKS=8,DAYS=['ma','di','wo','do','vr','za','zo'];
+let WEEKS=8,DAYS=['ma','di','wo','do','vr','za','zo'];
 
 
 
@@ -637,6 +637,7 @@ async function loadProfile(userId){
   const s=localStorage.getItem('rc_profile');
   if(!s){statusEl.textContent='Geen profieldata gevonden';return;}
   profile=JSON.parse(s);
+  WEEKS=profile.weeks||12;
   W=profile.weeks||12;
   schema=JSON.parse(localStorage.getItem('rc_schema')||'null');
   chatHistory=JSON.parse(localStorage.getItem('rc_chat')||'[]');
@@ -649,6 +650,8 @@ async function loadProfile(userId){
 function startApp(){
   profile=JSON.parse(localStorage.getItem('rc_profile')||'null');
   if(!profile)return;
+  WEEKS=profile.weeks||12;
+  W=profile.weeks||12;
   schema=JSON.parse(localStorage.getItem('rc_schema')||'null');
   chatHistory=JSON.parse(localStorage.getItem('rc_chat')||'[]');
   importedActivities=JSON.parse(localStorage.getItem('rc_activities')||'[]');
@@ -914,6 +917,7 @@ Regels: type alleen run bike rest. Omschrijving max 35 tekens. Geen apostrofs. G
 
   localStorage.setItem('rc_schema',JSON.stringify(schema));
   W=totalWeeks;
+  WEEKS=totalWeeks;
   renderSchema();
   renderToday();
   btn.textContent='⟳ Genereer';btn.disabled=false;
@@ -1001,7 +1005,7 @@ function markMissed(dag){
 }
 
 document.getElementById('prev-week').addEventListener('click',()=>{if(currentWeek>1){currentWeek--;renderSchema();}});
-document.getElementById('next-week').addEventListener('click',()=>{if(currentWeek<WEEKS){currentWeek++;renderSchema();}});
+document.getElementById('next-week').addEventListener('click',()=>{if(currentWeek<(schema?.length||WEEKS)){currentWeek++;renderSchema();}});
 
 function openDetailModal(dag){
   if(!schema)return;

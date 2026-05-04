@@ -897,7 +897,7 @@ Regels:
     try {
       raw = JSON.parse(jsonStr);
     } catch(e) {
-      throw new Error('Schema kon niet worden verwerkt. Probeer opnieuw.');
+      console.error('JSON parse error:', e.message); console.error('Raw JSON (first 500):', jsonStr.substring(0,500)); throw new Error('Parse fout: ' + e.message + ' (zie console voor details)');
     }
 
     if(!Array.isArray(raw) || raw.length === 0) throw new Error('Ongeldig schema ontvangen.');

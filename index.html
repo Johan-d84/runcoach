@@ -315,15 +315,28 @@ textarea{overflow:hidden}
       <button class="day-btn" id="sync-now-btn" style="width:100%;text-align:center;padding:10px;border-color:var(--accent3);color:var(--accent3)">↻ Nu synchroniseren</button>
       <div id="sync-msg" style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center"></div>
     </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">API Key instellen</div></div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Vul hier je Anthropic API key in. Dit is per apparaat apart nodig.</div>
+      <input class="setup-input" type="password" id="edit-apikey" placeholder="sk-ant-api03-..." style="margin-bottom:8px">
+      <button class="modal-btn" id="save-apikey-btn">API key opslaan</button>
+      <div id="apikey-status" style="font-size:11px;color:var(--accent2);margin-top:8px;text-align:center"></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Synchronisatie</div><span class="badge badge-blue">Cloud</span></div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Data wordt automatisch gesynchroniseerd tussen al je apparaten.</div>
+      <button class="day-btn" id="sync-now-btn" style="width:100%;text-align:center;padding:10px;border-color:var(--accent3);color:var(--accent3)">↻ Nu synchroniseren</button>
+      <div id="sync-msg" style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center"></div>
+    </div>
     <div style="margin-top:12px;text-align:center"><button class="day-btn" id="reset-btn" style="color:var(--danger);border-color:var(--danger)">App resetten</button></div>
   </div>
 
   <nav class="bottom-nav">
     <button class="nav-item active" data-page="today"><span class="nav-icon">🏠</span>Vandaag</button>
     <button class="nav-item" data-page="schema"><span class="nav-icon">📅</span>Schema</button>
-    <button class="nav-item" data-page="stats"><span class="nav-icon">📊</span>Stats</button>
-    <button class="nav-item" data-page="activities"><span class="nav-icon">🔗</span>Data</button>
     <button class="nav-item" data-page="coach"><span class="nav-icon">💬</span>Coach</button>
+    <button class="nav-item" data-page="food"><span class="nav-icon">🥗</span>Voeding</button>
+    <button class="nav-item" data-page="profile"><span class="nav-icon">👤</span>Profiel</button>
   </nav>
 </div>
 
@@ -501,6 +514,10 @@ function logFeeling(feel,btn){
 document.getElementById('generate-schema-btn').addEventListener('click',generateSchema);
 async function generateSchema(){
   const btn=document.getElementById('generate-schema-btn');
+  if(!profile?.apiKey){
+    alert('Geen API key ingesteld.\nGa naar Profiel → API Key instellen.');
+    return;
+  }
   btn.textContent='...';btn.disabled=true;
 
   // Simple prompt - NO detail field to avoid JSON parse errors
@@ -981,6 +998,25 @@ document.getElementById('sync-now-btn')?.addEventListener('click', async()=>{
   const ok=await syncFromCloud();
   btn.textContent='↻ Nu synchroniseren';btn.disabled=false;
   msg.textContent=ok?'✅ Gesynchroniseerd op '+new Date().toLocaleTimeString('nl-NL'):'⚠️ Sync mislukt';
+  renderToday();renderSchema();renderProfile();
+});
+document.getElementById('save-apikey-btn')?.addEventListener('click',()=>{
+  const key=document.getElementById('edit-apikey').value.trim();
+  if(!key){alert('Vul een API key in');return;}
+  profile.apiKey=key;
+  localStorage.setItem('rc_profile',JSON.stringify(profile));
+  document.getElementById('apikey-status').textContent='✅ API key opgeslagen';
+  document.getElementById('edit-apikey').value='';
+  setTimeout(()=>{document.getElementById('apikey-status').textContent='';},3000);
+});
+document.getElementById('sync-now-btn')?.addEventListener('click',async()=>{
+  const btn=document.getElementById('sync-now-btn');
+  const msg=document.getElementById('sync-msg');
+  btn.textContent='↻ Bezig...';btn.disabled=true;
+  await syncToCloud();
+  const ok=await syncFromCloud();
+  btn.textContent='↻ Nu synchroniseren';btn.disabled=false;
+  msg.textContent=ok?'✅ Gesynchroniseerd om '+new Date().toLocaleTimeString('nl-NL'):'⚠️ Sync mislukt';
   renderToday();renderSchema();renderProfile();
 });
 document.getElementById('reset-btn').addEventListener('click',()=>{if(confirm('Alle data wissen?')){localStorage.clear();location.reload();}});

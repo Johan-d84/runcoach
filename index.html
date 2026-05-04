@@ -172,10 +172,11 @@ textarea{overflow:hidden}
   <div class="setup-section"><label class="setup-label">Jouw naam</label><input class="setup-input" type="text" id="setup-name" placeholder="Naam"></div>
 
   <div class="setup-section"><label class="setup-label">Niveau</label><div class="setup-options three"><button class="opt-btn active" data-group="run-level" data-val="beginner">Beginner</button><button class="opt-btn" data-group="run-level" data-val="gevorderd">Gevorderd</button><button class="opt-btn" data-group="run-level" data-val="ervaren">Ervaren</button></div></div>
-  <div class="setup-section"><label class="setup-label">Doel</label><div class="setup-options"><button class="opt-btn active" data-group="goal" data-val="5km opbouwen">5km opbouwen</button><button class="opt-btn" data-group="goal" data-val="10km lopen">10km lopen</button><button class="opt-btn" data-group="goal" data-val="halve marathon">Halve marathon</button><button class="opt-btn" data-group="goal" data-val="fitter worden">Fitter worden</button></div></div>
+  <div class="setup-section"><label class="setup-label">Doel</label><div class="setup-options"><button class="opt-btn active" data-group="goal" data-val="5km opbouwen">5km opbouwen</button><button class="opt-btn" data-group="goal" data-val="10km lopen">10km lopen</button><button class="opt-btn" data-group="goal" data-val="halve marathon">Halve marathon</button><button class="opt-btn" data-group="goal" data-val="marathon">Marathon</button><button class="opt-btn" data-group="goal" data-val="fitter worden">Fitter worden</button></div></div>
   <div class="setup-section"><label class="setup-label">Fietsen meenemen?</label><div class="setup-options"><button class="opt-btn active" data-group="cycling" data-val="ja">Ja, fietsen ook</button><button class="opt-btn" data-group="cycling" data-val="nee">Nee, alleen lopen</button></div></div>
   <div class="setup-section"><label class="setup-label">Trainingsdagen/week</label><div class="setup-options three"><button class="opt-btn" data-group="days" data-val="3">3×</button><button class="opt-btn active" data-group="days" data-val="4">4×</button><button class="opt-btn" data-group="days" data-val="5">5×</button></div></div>
   <div class="setup-section"><label class="setup-label">Gewicht & lengte</label><div class="setup-row"><input class="setup-input" type="number" id="setup-weight" placeholder="kg"><input class="setup-input" type="number" id="setup-height" placeholder="cm"></div></div>
+  <div class="setup-section"><label class="setup-label">Leeftijd & max hartslag</label><div class="setup-row"><input class="setup-input" type="number" id="setup-age" placeholder="Leeftijd"><input class="setup-input" type="number" id="setup-mhr" placeholder="Max hartslag (opt.)"></div><div style="font-size:11px;color:var(--muted);margin-top:5px">Max hartslag wordt berekend als 220 minus leeftijd als je het leeg laat.</div></div>
   <button class="start-btn" id="start-btn">Start met trainen →</button>
 </div>
 
@@ -295,6 +296,18 @@ textarea{overflow:hidden}
     <div class="section-hdr">Mijn profiel</div>
     <div class="card" id="profile-card"></div>
     <div class="card">
+      <div class="card-header"><div class="card-title">Hartslagzones</div><span class="badge badge-yellow" id="hr-mhr-badge">Max: ? spm</span></div>
+      <div id="hr-zones-list"></div>
+      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Pas aan:</div>
+        <div style="display:flex;gap:8px;margin-bottom:8px">
+          <div style="flex:1"><div style="font-size:10px;color:var(--muted);margin-bottom:4px">Leeftijd</div><input class="setup-input" type="number" id="edit-age" placeholder="30" style="font-size:12px;padding:7px 10px"></div>
+          <div style="flex:1"><div style="font-size:10px;color:var(--muted);margin-bottom:4px">Max hartslag</div><input class="setup-input" type="number" id="edit-mhr" placeholder="190" style="font-size:12px;padding:7px 10px"></div>
+        </div>
+        <button class="day-btn" id="save-hr-btn" style="width:100%;text-align:center;padding:8px;border-color:var(--accent);color:var(--accent)">Hartslagzones opslaan</button>
+      </div>
+    </div>
+    <div class="card">
       <div class="card-header"><div class="card-title">Feedback aan coach</div></div>
       <textarea class="modal-input" id="feedback-input" placeholder="Hoe gaat het? Wat wil je aanpassen?"></textarea>
       <button class="modal-btn" id="feedback-btn">Verstuur naar coach</button>
@@ -413,7 +426,9 @@ document.querySelectorAll('.opt-btn').forEach(b=>b.addEventListener('click',()=>
 document.getElementById('start-btn').addEventListener('click',()=>{
   const k=document.getElementById('setup-api').value.trim();
   if(!k){alert('Voer je API key in');return;}
-  profile={apiKey:k,name:document.getElementById('setup-name').value.trim()||'Atleet',runLevel:document.querySelector('[data-group="run-level"].active')?.dataset.val||'beginner',goal:document.querySelector('[data-group="goal"].active')?.dataset.val||'5km opbouwen',cycling:document.querySelector('[data-group="cycling"].active')?.dataset.val||'ja',days:parseInt(document.querySelector('[data-group="days"].active')?.dataset.val||'4'),weight:document.getElementById('setup-weight').value||'75',height:document.getElementById('setup-height').value||'175',startDate:new Date().toISOString()};
+  const _age=parseInt(document.getElementById('setup-age')?.value)||30;
+  const _mhr=parseInt(document.getElementById('setup-mhr')?.value)||(220-_age);
+  profile={apiKey:k,name:document.getElementById('setup-name').value.trim()||'Atleet',runLevel:document.querySelector('[data-group="run-level"].active')?.dataset.val||'beginner',goal:document.querySelector('[data-group="goal"].active')?.dataset.val||'5km opbouwen',cycling:document.querySelector('[data-group="cycling"].active')?.dataset.val||'ja',days:parseInt(document.querySelector('[data-group="days"].active')?.dataset.val||'4'),weight:document.getElementById('setup-weight').value||'75',height:document.getElementById('setup-height').value||'175',age:_age,mhr:_mhr,startDate:new Date().toISOString()};
   localStorage.setItem('rc_profile',JSON.stringify(profile));
   document.getElementById('setup-screen').style.display='none';
   document.getElementById('app').style.display='block';
@@ -432,6 +447,11 @@ document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=
   if(b.dataset.page==='profile'){
     const el=document.getElementById('show-userid');
     if(el)el.textContent=getUserId();
+    renderHRZones();
+    const ea=document.getElementById('edit-age');
+    const em=document.getElementById('edit-mhr');
+    if(ea)ea.value=profile?.age||'';
+    if(em)em.value=profile?.mhr||'';
   }
   if(b.dataset.page==='profile'){
     const ep=document.getElementById('edit-proxy');
@@ -538,13 +558,13 @@ async function generateSchema(){
 
   // Simple prompt - NO detail field to avoid JSON parse errors
   const sysprompt = "Je bent een loopcoach. Geef altijd alleen valide JSON terug. Geen uitleg, geen markdown, geen code blocks. Geen speciale tekens of aanhalingstekens binnen tekstwaarden.";
-  const userprompt = `Maak een 8-weken trainingsschema voor een ${profile.runLevel} loper met doel: ${profile.goal}. ${profile.cycling==='ja'?'Voeg fietstrainingen toe.':''} Exact ${profile.days} trainingsdagen per week.
+  const userprompt = `Maak een 8-weken trainingsschema voor een ${profile.runLevel} loper met doel: ${profile.goal}. ${profile.cycling==='ja'?'Voeg fietstrainingen toe.':''} Exact ${profile.days} trainingsdagen per week. Max hartslag atleet: ${profile.mhr||180} spm. Noem hartslagzones in de omschrijving waar relevant (zone 2 = ${Math.round((profile.mhr||180)*.6)}-${Math.round((profile.mhr||180)*.7)} spm).
 
 Geef ALLEEN deze JSON structuur terug:
 [{"week":1,"focus":"Opbouw","km":15,"dagen":[{"dag":"ma","type":"run","omschrijving":"Duurloop 5km"},{"dag":"di","type":"rest","omschrijving":"Rust"},{"dag":"wo","type":"run","omschrijving":"Intervallen"},{"dag":"do","type":"rest","omschrijving":"Rust"},{"dag":"vr","type":"run","omschrijving":"Tempo 4km"},{"dag":"za","type":"rest","omschrijving":"Rust"},{"dag":"zo","type":"rest","omschrijving":"Rust"}]}]
 
 Regels:
-- type is alleen: run, bike, rest, of cross
+- type is alleen: run, bike, of rest
 - omschrijving is maximaal 30 tekens
 - geen aanhalingstekens in omschrijving
 - alle 8 weken, alle 7 dagen`;
@@ -582,7 +602,7 @@ Regels:
       km_totaal: Number(wk.km || wk.km_totaal || 0),
       dagen: (wk.dagen || []).map(d => ({
         dag: String(d.dag || '?').substring(0, 2),
-        type: ['run','bike','rest','cross'].includes(d.type) ? d.type : 'rest',
+        type: ['run','bike','rest'].includes(d.type) ? d.type : 'rest',
         beschrijving: String(d.omschrijving || d.beschrijving || d.type || '').substring(0, 50),
         detail: ''
       }))
@@ -961,7 +981,7 @@ async function askCoach(msg){
   const doneCount=trainDays.filter(d=>wl[d.dag]).length;
   const feel=JSON.parse(localStorage.getItem('rc_feelings')||'{}')[new Date().toDateString()]||'onbekend';
   const ra=importedActivities.slice(0,5).map(a=>`${a.type} ${a.distance}km${a.date?' op '+a.date.substring(0,10):''}${a.hr?' (♥'+a.hr+')':''}`).join('; ');
-  const sys=`Je bent RunCoach, persoonlijke sport- en voedingscoach voor ${profile.name}. Profiel: niveau=${profile.runLevel}, doel=${profile.goal}, gewicht=${profile.weight}kg, lengte=${profile.height}cm, fietsen=${profile.cycling}. Status: week ${currentWeek}/${WEEKS}, ${doneCount}/${trainDays.length} sessies gedaan, streak=${calcStreak()}, gevoel vandaag=${feel}. Weekfocus: ${wk?.focus||'?'}. ${ra?'Recente activiteiten: '+ra+'.':''} Wees motiverend, persoonlijk en concreet. Max 4-5 zinnen tenzij gevraagd. Spreek ${profile.name} aan.`;
+  const sys=`Je bent RunCoach, persoonlijke sport- en voedingscoach voor ${profile.name}. Profiel: niveau=${profile.runLevel}, doel=${profile.goal}, gewicht=${profile.weight}kg, lengte=${profile.height}cm, fietsen=${profile.cycling}, max hartslag=${profile.mhr||180} spm (zone2=${Math.round((profile.mhr||180)*.6)}-${Math.round((profile.mhr||180)*.7)} spm). Status: week ${currentWeek}/${WEEKS}, ${doneCount}/${trainDays.length} sessies gedaan, streak=${calcStreak()}, gevoel vandaag=${feel}. Weekfocus: ${wk?.focus||'?'}. ${ra?'Recente activiteiten: '+ra+'.':''} Wees motiverend, persoonlijk en concreet. Max 4-5 zinnen tenzij gevraagd. Spreek ${profile.name} aan.`;
   const msgs=[...chatHistory.slice(-12).map(m=>({role:m.role==='ai'?'assistant':m.role,content:m.content})),{role:'user',content:msg}];
   try{const r=await callClaude(msgs,500,sys);removeTyping();addBubble('ai',r);}
   catch(e){removeTyping();addBubble('ai','Sorry, er ging iets mis. Probeer het opnieuw.');console.error(e);}
@@ -973,6 +993,34 @@ async function sendChat(){const input=document.getElementById('chat-input');cons
 function sendQuick(msg){switchTo('coach');addBubble('user',msg);askCoach(msg);}
 async function autoGreet(){await askCoach(`Hoi! Ik ben ${profile.name}, ${profile.runLevel} loper met doel: ${profile.goal}. ${profile.cycling==='ja'?'Ik fiets ook regelmatig.':''} Geef een korte welkomstbegroeting en leg uit wat ik allemaal kan met deze app.`);}
 
+function calcHRZones(mhr) {
+  return [
+    {nr:1, naam:'Zone 1 — Herstel',    pct:'50-60%', min:Math.round(mhr*.50), max:Math.round(mhr*.60), kleur:'#60c8f0', uitleg:'Wandelen, warming-up. Actief herstel.'},
+    {nr:2, naam:'Zone 2 — Duurloop',   pct:'60-70%', min:Math.round(mhr*.60), max:Math.round(mhr*.70), kleur:'#5be3a0', uitleg:'Rustige duurlopen. Vetverbranding. Basis van je training.'},
+    {nr:3, naam:'Zone 3 — Tempo',      pct:'70-80%', min:Math.round(mhr*.70), max:Math.round(mhr*.80), kleur:'#c8f060', uitleg:'Comfortabel hard. Tempoduurlopen.'},
+    {nr:4, naam:'Zone 4 — Drempel',    pct:'80-90%', min:Math.round(mhr*.80), max:Math.round(mhr*.90), kleur:'#f0a860', uitleg:'Anaerobe drempel. Intervallen en tempowerk.'},
+    {nr:5, naam:'Zone 5 — Maximaal',   pct:'90-100%',min:Math.round(mhr*.90), max:mhr,                  kleur:'#f06060', uitleg:'Sprint en VO2max. Kort en intensief.'},
+  ];
+}
+
+function renderHRZones() {
+  const mhr = profile?.mhr || 180;
+  const badge = document.getElementById('hr-mhr-badge');
+  if(badge) badge.textContent = `Max: ${mhr} spm`;
+  const zones = calcHRZones(mhr);
+  const list = document.getElementById('hr-zones-list');
+  if(!list) return;
+  list.innerHTML = zones.map(z => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
+      <div style="width:4px;height:36px;border-radius:2px;background:${z.kleur};flex-shrink:0"></div>
+      <div style="flex:1">
+        <div style="font-size:12px;font-weight:500;margin-bottom:2px">${z.naam}</div>
+        <div style="font-size:11px;color:var(--muted)">${z.min}–${z.max} spm · ${z.uitleg}</div>
+      </div>
+      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);flex-shrink:0">${z.pct}</div>
+    </div>`).join('');
+}
+
 function renderProfile(){
   if(!profile)return;
   document.getElementById('profile-card').innerHTML=`
@@ -982,6 +1030,8 @@ function renderProfile(){
       <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Fietsen</span><span>${profile.cycling==='ja'?'Ja':'Nee'}</span></div>
       <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Trainingsdagen</span><span>${profile.days}× per week</span></div>
       <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Gewicht / lengte</span><span>${profile.weight} kg / ${profile.height} cm</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Leeftijd</span><span>${profile.age||'?'} jaar</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Max hartslag</span><span>${profile.mhr||180} spm</span></div>
       <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Gestart op</span><span>${new Date(profile.startDate).toLocaleDateString('nl-NL')}</span></div>
       <div style="display:flex;justify-content:space-between;align-items:center"><span style="color:var(--muted)">Proxy URL</span><span style="font-size:11px;color:var(--accent3);word-break:break-all;text-align:right;max-width:60%">${profile.proxyUrl||'niet ingesteld'}</span></div>
     </div>`;
@@ -1046,6 +1096,14 @@ document.getElementById('sync-now-btn')?.addEventListener('click',async()=>{
   } else {
     msg.textContent='⚠️ Sync mislukt. User ID: '+uid;
   }
+});
+document.getElementById('save-hr-btn')?.addEventListener('click',()=>{
+  const age=parseInt(document.getElementById('edit-age')?.value)||profile?.age||30;
+  const mhr=parseInt(document.getElementById('edit-mhr')?.value)||(220-age);
+  profile.age=age;profile.mhr=mhr;
+  localStorage.setItem('rc_profile',JSON.stringify(profile));
+  renderHRZones();renderProfile();
+  alert('✅ Hartslagzones opgeslagen!');
 });
 document.getElementById('save-userid-btn')?.addEventListener('click',async()=>{
   const newId=document.getElementById('edit-userid').value.trim();

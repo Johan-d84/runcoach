@@ -790,16 +790,21 @@ function renderToday(){
   if(wk?.dagen){
     document.getElementById('today-week-list').innerHTML=wk.dagen.map(d=>{
       const isDone=!!wl[d.dag];
-      const isT=d.dag===tc;
-      const tc2=isDone?'dot-done':`dot-${d.type}`;
-      const tg=isDone?'tag-done':`tag-${d.type}`;
-      return `<div class="day-row" style="${isT?'background:rgba(200,240,96,.04);margin:0 -14px;padding:10px 14px':''}${d.type==='rest'&&!isT?'opacity:.45':''}" >
-        <div class="day-dot ${tc2}"></div>
+      const isToday=d.dag===tc;
+      const dotCls=isDone?'dot-done':`dot-${d.type}`;
+      const tagCls=isDone?'tag-done':`tag-${d.type}`;
+      const rowStyle=isToday?'background:rgba(200,240,96,.04);margin:0 -14px;padding:10px 14px':(d.type==='rest'?'opacity:.4':'');
+      return `<div class="day-row" style="${rowStyle}">
+        <div class="day-dot ${dotCls}"></div>
         <div class="day-info">
-          <div class="day-name">${d.dag}${isT?' <span style="font-size:10px;color:var(--accent3)">← vandaag</span>':''} <span class="tag ${tg}">${isDone?'✓':d.type}</span></div>
+          <div class="day-name">${d.dag}${isToday?' <span style="font-size:10px;color:var(--accent3)">\u2190 vandaag</span>':''} <span class="tag ${tagCls}">${isDone?'\u2713':d.type}</span></div>
           <div class="day-desc">${d.beschrijving}</div>
         </div>
-        ${d.type!=='rest'&&!isDone?`<div class="day-actions"><button class="day-btn" onclick="openLogModal('${d.dag}','${(d.beschrijving||'').replace(/'/g,"\\'")}','${(d.detail||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')">Log</button><button class="day-btn done-btn" onclick="markDone('${d.dag}');renderToday()">✓</button><button class="day-btn" style="border-color:var(--danger);color:var(--danger)" onclick="markMissed('${d.dag}');renderToday()">✕</button></div>`:''}
+        ${d.type!=='rest'&&!isDone?`<div class="day-actions">
+          <button class="day-btn" onclick="openLogModal('${d.dag}','${(d.beschrijving||'').replace(/'/g,"\\'")}','${(d.detail||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')">Log</button>
+          <button class="day-btn done-btn" onclick="markDone('${d.dag}');renderToday()">\u2713</button>
+          <button class="day-btn" style="border-color:var(--danger);color:var(--danger)" onclick="markMissed('${d.dag}');renderToday()">\u2715</button>
+        </div>`:''}
       </div>`;
     }).join('');
   }

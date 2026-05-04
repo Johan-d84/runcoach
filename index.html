@@ -65,7 +65,7 @@ button,input,textarea,select{font-family:inherit}
 .day-row{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer}
 .day-row:last-child{border-bottom:none}
 .day-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
-.dot-run{background:var(--accent)}.dot-bike{background:var(--accent3)}.dot-rest{background:var(--muted)}.dot-done{background:var(--accent2)}.dot-cross{background:var(--warn)}.dot-swim{background:#60a0f0}.dot-walk{background:#c090f0}
+.dot-run{background:var(--accent)}.dot-bike{background:var(--accent3)}.dot-rest{background:var(--muted)}.dot-dng{background:var(--danger)}.dot-done{background:var(--accent2)}.dot-cross{background:var(--warn)}.dot-swim{background:#60a0f0}.dot-walk{background:#c090f0}
 .day-info{flex:1;min-width:0}
 .day-name{font-size:13px;font-weight:500;margin-bottom:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .day-desc{font-size:12px;color:var(--muted);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -667,7 +667,7 @@ function renderToday(){
           <div class="day-name">${d.dag}${isT?' <span style="font-size:10px;color:var(--accent3)">← vandaag</span>':''} <span class="tag ${tg}">${isDone?'✓':d.type}</span></div>
           <div class="day-desc">${d.beschrijving}</div>
         </div>
-        ${d.type!=='rest'&&!isDone?`<div class="day-actions"><button class="day-btn" onclick="openLogModal('${d.dag}','${(d.beschrijving||'').replace(/'/g,"\\'")}','${(d.detail||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')">Log</button><button class="day-btn done-btn" onclick="markDone('${d.dag}');renderToday()">✓</button></div>`:''}
+        ${d.type!=='rest'&&!isDone?`<div class="day-actions"><button class="day-btn" onclick="openLogModal('${d.dag}','${(d.beschrijving||'').replace(/'/g,"\\'")}','${(d.detail||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')">Log</button><button class="day-btn done-btn" onclick="markDone('${d.dag}');renderToday()">✓</button><button class="day-btn" style="border-color:var(--danger);color:var(--danger)" onclick="markMissed('${d.dag}');renderToday()">✕</button></div>`:''}
       </div>`;
     }).join('');
   }
@@ -721,14 +721,15 @@ const weekOneMax=Math.round(currentDist*1.1);
 const totalWeeks=profile.weeks||12;
 const userprompt = `Maak een ${totalWeeks}-weken trainingsschema voor een loper met doel: ${profile.goal}. Huidige conditie: kan nu comfortabel ${currentDist}km lopen. Week 1 mag maximaal ${weekOneMax}km als langste duurloop hebben. Bouw geleidelijk op over ${totalWeeks} weken naar het doel. ${profile.cycling==='ja'?'Voeg fietstrainingen toe.':''} Exact ${profile.days} trainingsdagen per week. Max hartslag: ${profile.mhr||180} spm (zone 2 = ${Math.round((profile.mhr||180)*.6)}-${Math.round((profile.mhr||180)*.7)} spm). Pas het schema aan op de huidige conditie, niet op het niveau label.
 
-Geef ALLEEN deze JSON structuur terug:
-[{"week":1,"focus":"Opbouw","km":15,"dagen":[{"dag":"ma","type":"run","omschrijving":"Duurloop 5km"},{"dag":"di","type":"rest","omschrijving":"Rust"},{"dag":"wo","type":"run","omschrijving":"Intervallen"},{"dag":"do","type":"rest","omschrijving":"Rust"},{"dag":"vr","type":"run","omschrijving":"Tempo 4km"},{"dag":"za","type":"rest","omschrijving":"Rust"},{"dag":"zo","type":"rest","omschrijving":"Rust"}]}]
+Geef ALLEEN deze JSON structuur terug, geen andere tekst:
+[{"week":1,"focus":"Opbouw","km":15,"dagen":[{"dag":"ma","type":"run","omschrijving":"Duurloop 5km","instructie":"Loop 5km in zone 2. Tempo ca 6:30 min/km. Hartslag ${Math.round((profile.mhr||180)*.65)} spm. Warm op 5 min wandelen."},{"dag":"di","type":"rest","omschrijving":"Rust","instructie":"Rust. Eventueel licht stretchen."},{"dag":"wo","type":"run","omschrijving":"Intervallen 6x400m","instructie":"Warming up 10 min. Dan 6x400m in 5:00 min/km (${Math.round((profile.mhr||180)*.88)} spm), 90 sec rust ertussen. Cooling down 10 min."},{"dag":"do","type":"rest","omschrijving":"Rust","instructie":"Rust."},{"dag":"vr","type":"run","omschrijving":"Tempoduur 4km","instructie":"4km in zone 3, tempo 5:45 min/km, hartslag ${Math.round((profile.mhr||180)*.75)} spm."},{"dag":"za","type":"rest","omschrijving":"Rust","instructie":"Rust."},{"dag":"zo","type":"rest","omschrijving":"Rust","instructie":"Rust."}]}]
 
 Regels:
 - type is alleen: run, bike, of rest
-- omschrijving maximaal 40 tekens
-- geen aanhalingstekens in omschrijving
-- alle 8 weken, alle 7 dagen`;
+- omschrijving max 40 tekens, geen aanhalingstekens
+- instructie max 120 tekens: vermeld altijd tempo in min/km EN hartslag in spm
+- gebruik de max hartslag ${profile.mhr||180} spm voor berekening van zones
+- alle ${totalWeeks} weken, alle 7 dagen`;
 
   try{
     const res = await callClaude([{role:'user',content:userprompt}], 2000, sysprompt);
@@ -765,8 +766,8 @@ Regels:
       dagen: (wk.dagen || []).map(d => ({
         dag: String(d.dag || '?').substring(0, 2),
         type: ['run','bike','rest'].includes(d.type) ? d.type : 'rest',
-        beschrijving: String(d.omschrijving || d.beschrijving || d.type || '').substring(0, 50),
-        detail: ''
+        beschrijving: String(d.omschrijving || d.beschrijving || d.type || '').substring(0, 60),
+        detail: String(d.instructie || d.detail || '')
       }))
     }));
 
@@ -793,8 +794,9 @@ function renderSchema(){
     `<div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-style:italic;line-height:1.5">${wk.focus||''}</div>`+
     wk.dagen.map(d=>{
       const done=!!wl[d.dag];
-      const missed=!!(JSON.parse(localStorage.getItem('rc_logs')||'{}')[`w${currentWeek}`]||{})[d.dag]?.missed;
-const tc=done?'dot-done':missed?'dot-rest':`dot-${d.type}`;
+      const missed=!!(JSON.parse(localStorage.getItem('rc_l')||'{}')[`w${wk}`]||{})[d.dag]?.missed;
+    const missed=!!(JSON.parse(localStorage.getItem('rc_logs')||'{}')[`w${currentWeek}`]||{})[d.dag]?.missed;
+const tc=done?'dot-done':missed?'dot-dng':`dot-${d.type}`;
       const tg=done?'tag-done':`tag-${d.type}`;
       return `<div class="day-row">
         <div class="day-dot ${tc}"></div>
@@ -806,7 +808,8 @@ const tc=done?'dot-done':missed?'dot-rest':`dot-${d.type}`;
           <button class="day-btn" onclick="openDetailModal('${d.dag}')">ℹ</button>
           <button class="day-btn" onclick="openLogModal('${d.dag}','${(d.beschrijving||'').replace(/'/g,"\\'")}','${(d.detail||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')">Log</button>
           <button class="day-btn done-btn" onclick="markDone('${d.dag}');renderSchema()">✓</button>
-        </div>`:`<div class="day-actions"><button class="day-btn" style="color:var(--muted);font-size:10px" onclick="undoDone('${d.dag}')">↩undo</button></div>`):''}
+          <button class="day-btn" style="border-color:var(--danger);color:var(--danger)" onclick="markMissed('${d.dag}')">✕</button>
+        </div>`:`<div class="day-actions"><button class="day-btn" style="color:var(--muted);font-size:10px" onclick="undoDone('${d.dag}')">↩</button></div>`):''}
       </div>`;
     }).join('');
   document.getElementById('streak-card').style.display='block';
@@ -845,6 +848,20 @@ function undoDone(dag){
   renderSchema();updateStreakBadge();
 }
 
+function markMissed(dag){
+  const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
+  const key=`w${currentWeek}`;
+  if(!logs[key])logs[key]={};
+  logs[key][dag]={missed:true,ts:Date.now()};
+  localStorage.setItem('rc_logs',JSON.stringify(logs));
+  renderSchema();renderToday();updateStreakBadge();
+  // Coach advice
+  const d=schema?.[currentWeek-1]?.dagen?.find(x=>x.dag===dag);
+  switchTo('coach');
+  addBubble('user','Training gemist op '+dag+': '+(d?.beschrijving||''));
+  askCoach('Training gemist op '+dag+': '+(d?.beschrijving||'')+'. Geef kort advies hoe ik dit compenseer.');
+}
+
 document.getElementById('prev-week').addEventListener('click',()=>{if(currentWeek>1){currentWeek--;renderSchema();}});
 document.getElementById('next-week').addEventListener('click',()=>{if(currentWeek<WEEKS){currentWeek++;renderSchema();}});
 
@@ -852,10 +869,20 @@ function openDetailModal(dag){
   if(!schema)return;
   const d=schema[currentWeek-1]?.dagen?.find(x=>x.dag===dag);if(!d)return;
   document.getElementById('detail-modal-title').textContent=`${d.dag.toUpperCase()} — ${d.beschrijving}`;
+  const mhr=profile?.mhr||180;
+  const zns=calcHRZones(mhr);
+  const detTxt=d.detail&&d.detail.length>3?d.detail:d.beschrijving;
+  const zm=(detTxt||'').toLowerCase().match(/zone (\d)/);
+  const zn=zm?parseInt(zm[1]):2;
+  const z=zns[Math.min(zn-1,zns.length-1)]||zns[1];
   document.getElementById('detail-modal-body').innerHTML=`
-    <span class="tag tag-${d.type}" style="margin-bottom:14px;display:inline-block">${d.type}</span>
-    <div style="font-size:14px;line-height:1.8;color:var(--text);margin-bottom:16px;white-space:pre-line">${d.detail||d.beschrijving}</div>
-    <button class="modal-btn" onclick="closeDetailModal();openLogModal('${d.dag}','${(d.beschrijving||'').replace(/'/g,"\\'")}','${(d.detail||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')">Training loggen</button>`;
+    <span class="tag tag-${d.type}" style="margin-bottom:12px;display:inline-block">${d.type}</span>
+    <div style="font-size:14px;line-height:1.8;color:var(--text);margin-bottom:12px;white-space:pre-line">${detTxt}</div>
+    <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;font-size:13px;display:flex;gap:20px">
+      <div>&#x1F493; <strong>${z.min}&ndash;${z.max} spm</strong> <span style="color:var(--muted)">(${z.pct})</span></div>
+      <div>&#x1F4CA; <strong>${z.naam.split("\u2014")[0].trim()}</strong></div>
+    </div>
+    <button class="modal-btn" onclick="closeDetailModal();openLogModal('${d.dag}','${(d.beschrijving||'').replace(/'/g,"\\'")}')">Training loggen</button>`;
   document.getElementById('detail-modal').classList.add('open');
 }
 function closeDetailModal(){document.getElementById('detail-modal').classList.remove('open');}

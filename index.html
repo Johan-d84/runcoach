@@ -795,7 +795,6 @@ function renderSchema(){
     wk.dagen.map(d=>{
       const done=!!wl[d.dag];
       const missed=!!(JSON.parse(localStorage.getItem('rc_l')||'{}')[`w${wk}`]||{})[d.dag]?.missed;
-    const missed=!!(JSON.parse(localStorage.getItem('rc_logs')||'{}')[`w${currentWeek}`]||{})[d.dag]?.missed;
 const tc=done?'dot-done':missed?'dot-dng':`dot-${d.type}`;
       const tg=done?'tag-done':`tag-${d.type}`;
       return `<div class="day-row">

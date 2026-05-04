@@ -420,6 +420,67 @@ textarea{overflow:hidden}
   </div>
 </div>
 
+<!-- GENERATE SETTINGS MODAL -->
+<div class="modal-overlay" id="gen-modal">
+  <div class="modal">
+    <div class="modal-title">Schema genereren <button class="modal-close" onclick="document.getElementById('gen-modal').classList.remove('open')">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+
+      <div>
+        <label class="setup-label" style="font-size:10px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;display:block;margin-bottom:7px">Doel</label>
+        <div class="setup-options" style="display:grid;grid-template-columns:1fr 1fr;gap:7px" id="gen-goal-opts">
+          <button class="opt-btn" data-g="gen-goal" data-v="5km opbouwen">5km</button>
+          <button class="opt-btn" data-g="gen-goal" data-v="10km lopen">10km</button>
+          <button class="opt-btn" data-g="gen-goal" data-v="halve marathon">Halve marathon</button>
+          <button class="opt-btn" data-g="gen-goal" data-v="marathon">Marathon</button>
+          <button class="opt-btn" data-g="gen-goal" data-v="fitter worden">Fitter worden</button>
+        </div>
+      </div>
+
+      <div>
+        <label class="setup-label" style="font-size:10px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;display:block;margin-bottom:7px">Huidige afstand</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px" id="gen-dist-opts">
+          <button class="opt-btn" data-g="gen-dist" data-v="2">~2 km</button>
+          <button class="opt-btn" data-g="gen-dist" data-v="5">~5 km</button>
+          <button class="opt-btn" data-g="gen-dist" data-v="10">~10 km</button>
+          <button class="opt-btn" data-g="gen-dist" data-v="15">~15 km</button>
+          <button class="opt-btn" data-g="gen-dist" data-v="21">~21 km</button>
+          <button class="opt-btn" data-g="gen-dist" data-v="30">30+ km</button>
+        </div>
+      </div>
+
+      <div>
+        <label class="setup-label" style="font-size:10px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;display:block;margin-bottom:7px">Trainingsdagen per week</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
+          <button class="opt-btn" data-g="gen-days" data-v="3">3×</button>
+          <button class="opt-btn" data-g="gen-days" data-v="4">4×</button>
+          <button class="opt-btn" data-g="gen-days" data-v="5">5×</button>
+        </div>
+      </div>
+
+      <div>
+        <label class="setup-label" style="font-size:10px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;display:block;margin-bottom:7px">Aantal weken</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:7px">
+          <button class="opt-btn" data-g="gen-weeks" data-v="8">8</button>
+          <button class="opt-btn" data-g="gen-weeks" data-v="12">12</button>
+          <button class="opt-btn" data-g="gen-weeks" data-v="16">16</button>
+          <button class="opt-btn" data-g="gen-weeks" data-v="20">20</button>
+        </div>
+      </div>
+
+      <div>
+        <label class="setup-label" style="font-size:10px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;display:block;margin-bottom:7px">Fietsen meenemen?</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
+          <button class="opt-btn" data-g="gen-cyc" data-v="ja">Ja</button>
+          <button class="opt-btn" data-g="gen-cyc" data-v="nee">Nee</button>
+        </div>
+      </div>
+
+      <button class="modal-btn" id="gen-confirm-btn">Schema genereren →</button>
+    </div>
+  </div>
+</div>
+
 <script>
 let profile=null,schema=null,currentWeek=1,chatHistory=[],logTargetDay=null,logTargetDetail=null;
 let importedActivities=[],stravaToken=null,charts={};
@@ -473,6 +534,45 @@ function downloadFile(filename, content, mimeType) {
   a.href = url; a.download = filename; a.click();
   URL.revokeObjectURL(url);
 }
+
+function openGenerateModal() {
+  const p = profile || {};
+  // Pre-select current profile values
+  const presets = {
+    'gen-goal': p.goal || '10km lopen',
+    'gen-dist': String(p.currentDist || '10'),
+    'gen-days': String(p.days || '4'),
+    'gen-weeks': String(p.weeks || '12'),
+    'gen-cyc': p.cycling || 'nee'
+  };
+  Object.entries(presets).forEach(([g, v]) => {
+    document.querySelectorAll(`[data-g="${g}"]`).forEach(b => {
+      b.classList.toggle('active', b.dataset.v === v);
+    });
+  });
+  document.getElementById('gen-modal').classList.add('open');
+}
+
+document.querySelectorAll('#gen-modal .opt-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll(`[data-g="${b.dataset.g}"]`).forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+  });
+});
+
+document.getElementById('gen-confirm-btn').addEventListener('click', () => {
+  const gv = g => document.querySelector(`[data-g="${g}"].active`)?.dataset.v;
+  // Update profile with new settings
+  profile.goal = gv('gen-goal') || profile.goal;
+  profile.currentDist = parseInt(gv('gen-dist') || profile.currentDist || 10);
+  profile.days = parseInt(gv('gen-days') || profile.days || 4);
+  profile.weeks = parseInt(gv('gen-weeks') || profile.weeks || 12);
+  profile.cycling = gv('gen-cyc') || profile.cycling;
+  W = profile.weeks;
+  localStorage.setItem('rc_profile', JSON.stringify(profile));
+  document.getElementById('gen-modal').classList.remove('open');
+  generateSchema();
+});
 
 async function init(){
   if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
@@ -702,6 +802,25 @@ function logFeeling(feel,btn){
   switchTo('coach');addBubble('user',msgs[feel]);askCoach(msgs[feel]);
 }
 
+document.getElementById('generate-schema-btn').addEventListener('click',()=>{
+  document.getElementById('gen-goal').value=profile.goal||'marathon';
+  document.getElementById('gen-days').value=profile.days||4;
+  document.getElementById('gen-weeks').value=profile.weeks||12;
+  document.getElementById('gen-dist').value=profile.currentDist||10;
+  document.getElementById('gen-cycling').checked=profile.cycling==='ja';
+  document.getElementById('gen-modal').classList.add('open');
+},{capture:true});
+document.getElementById('gen-confirm-btn')?.addEventListener('click',()=>{
+  profile.goal=document.getElementById('gen-goal').value||profile.goal;
+  profile.days=parseInt(document.getElementById('gen-days').value)||profile.days;
+  profile.weeks=parseInt(document.getElementById('gen-weeks').value)||profile.weeks;
+  profile.currentDist=parseInt(document.getElementById('gen-dist').value)||profile.currentDist;
+  profile.cycling=document.getElementById('gen-cycling').checked?'ja':'nee';
+  W=profile.weeks;
+  localStorage.setItem('rc_profile',JSON.stringify(profile));
+  document.getElementById('gen-modal').classList.remove('open');
+  generateSchema();
+});
 document.getElementById('delete-schema-btn')?.addEventListener('click',()=>{
   if(!schema){alert('Geen schema om te verwijderen.');return;}
   if(!confirm('Schema verwijderen? Je trainingslog blijft bewaard.'))return;
@@ -716,7 +835,19 @@ document.getElementById('export-schema-btn')?.addEventListener('click',()=>{
   if(!schema){alert('Genereer eerst een schema.');return;}
   exportWeekToGarmin(currentWeek);
 });
-document.getElementById('generate-schema-btn').addEventListener('click',generateSchema);
+document.getElementById('generate-schema-btn').addEventListener('click',openGenerateModal);
+function buildDetail(d) {
+  if (d.instructie) return d.instructie;
+  if (d.wu || d.hw || d.cd) {
+    const parts = [];
+    if (d.wu) parts.push('Warming up: ' + d.wu);
+    if (d.hw) parts.push('Hoofdwerk: ' + d.hw);
+    if (d.cd) parts.push('Cooling down: ' + d.cd);
+    return parts.join(' | ');
+  }
+  return d.detail || '';
+}
+
 async function generateSchema(){
   const btn=document.getElementById('generate-schema-btn');
   if(!profile?.apiKey){
@@ -732,25 +863,17 @@ const weekOneMax=Math.round(currentDist*1.1);
 const totalWeeks=profile.weeks||12;
 const userprompt = `Maak een ${totalWeeks}-weken trainingsschema voor een loper met doel: ${profile.goal}. Huidige conditie: kan nu comfortabel ${currentDist}km lopen. Week 1 mag maximaal ${weekOneMax}km als langste duurloop hebben. Bouw geleidelijk op over ${totalWeeks} weken naar het doel. ${profile.cycling==='ja'?'Voeg fietstrainingen toe.':''} Exact ${profile.days} trainingsdagen per week. Max hartslag: ${profile.mhr||180} spm (zone 2 = ${Math.round((profile.mhr||180)*.6)}-${Math.round((profile.mhr||180)*.7)} spm). Pas het schema aan op de huidige conditie, niet op het niveau label.
 
-Geef ALLEEN deze JSON structuur terug, geen andere tekst:
-[{"week":1,"focus":"Opbouw","km":15,"dagen":[
-{"dag":"ma","type":"run","omschrijving":"Duurloop 5km zone 2","instructie":"Warming up: 5 min wandelen.\nHoofdwerk: 5km rustige duurloop in zone 2, tempo 6:30 min/km, hartslag ${Math.round((profile.mhr||180)*.65)} spm. Praten moet mogelijk blijven.\nCooling down: 5 min wandelen + 5 min stretchen (kuit, hamstring, heupbuiger)."},
-{"dag":"di","type":"rest","omschrijving":"Rust & herstel","instructie":"Volledige rust of actief herstel: 20 min rustig wandelen. Foam rol je benen 10 min. Drink voldoende water."},
-{"dag":"wo","type":"run","omschrijving":"Intervallen 6x400m","instructie":"Warming up: 10 min rustig inlopen zone 2.\nHoofdwerk: 6x400m in tempo 5:00 min/km (hartslag ${Math.round((profile.mhr||180)*.88)} spm). Na elke 400m: 90 sec actieve rust (rustig stappen).\nCooling down: 10 min rustig uitlopen + stretchen."},
-{"dag":"do","type":"rest","omschrijving":"Rust","instructie":"Rust. Benen mogen zwaar aanvoelen na de intervallen van gisteren, dat is normaal."},
-{"dag":"vr","type":"run","omschrijving":"Tempoduur 4km","instructie":"Warming up: 5 min wandelen + 5 min rustig lopen.\nHoofdwerk: 4km in zone 3, tempo 5:45 min/km, hartslag ${Math.round((profile.mhr||180)*.75)} spm. Comfortabel hard, je kunt nog net praten.\nCooling down: 5 min rustig uitlopen + stretchen."},
-{"dag":"za","type":"rest","omschrijving":"Rust","instructie":"Rust of lichte wandeling. Goede voorbereiding voor de lange duurloop morgen: drink extra water, slaap goed."},
-{"dag":"zo","type":"rest","omschrijving":"Rust","instructie":"Rust."}
-]}]
+Geef ALLEEN deze JSON structuur terug, geen andere tekst, geen markdown:
+[{"week":1,"focus":"Opbouw","km":15,"dagen":[{"dag":"ma","type":"run","omschrijving":"Duurloop 5km zone 2","wu":"5 min wandelen als warming up","hw":"5km in zone 2, tempo 6:30 min/km, hartslag ${Math.round((profile.mhr||180)*.65)} spm. Praten moet mogelijk blijven.","cd":"5 min wandelen + stretchen kuit en hamstring."},{"dag":"di","type":"rest","omschrijving":"Rust","wu":"","hw":"Rust of 20 min wandelen.","cd":""},{"dag":"wo","type":"run","omschrijving":"Intervallen 6x400m","wu":"10 min rustig inlopen in zone 2.","hw":"6x400m in 5:00 min/km (${Math.round((profile.mhr||180)*.88)} spm). Na elke 400m: 90 sec rustig stappen.","cd":"10 min uitlopen + stretchen."},{"dag":"do","type":"rest","omschrijving":"Rust","wu":"","hw":"Rust. Benen mogen zwaar aanvoelen, dat is normaal.","cd":""},{"dag":"vr","type":"run","omschrijving":"Tempoduur 4km","wu":"5 min wandelen + 5 min rustig lopen.","hw":"4km in zone 3, tempo 5:45 min/km, ${Math.round((profile.mhr||180)*.75)} spm.","cd":"5 min uitlopen + stretchen."},{"dag":"za","type":"rest","omschrijving":"Rust","wu":"","hw":"Rust. Drink extra water, slaap goed.","cd":""},{"dag":"zo","type":"rest","omschrijving":"Rust","wu":"","hw":"Rust.","cd":""}]}]
 
 Regels:
 - type is alleen: run, bike, of rest
-- omschrijving max 40 tekens, geen aanhalingstekens
-- instructie: schrijf ALTIJD drie onderdelen: Warming up, Hoofdwerk, Cooling down
-- vermeld bij elk onderdeel het exacte tempo in min/km EN hartslag in spm
-- gebruik \n voor regeleindes binnen instructie
-- gebruik de max hartslag ${profile.mhr||180} spm voor hartslagberekeningen
-- instructie mag lang zijn, wees volledig en concreet
+- omschrijving max 40 tekens, geen aanhalingstekens of speciale tekens
+- wu = warming up tekst (leeg bij rust)
+- hw = hoofdwerk tekst met tempo en hartslag
+- cd = cooling down tekst (leeg bij rust)
+- alle velden: geen aanhalingstekens, geen backslashes, gewone tekst
+- gebruik max hartslag ${profile.mhr||180} spm voor berekeningen
 - alle ${totalWeeks} weken, alle 7 dagen`;
 
   try{
@@ -789,7 +912,7 @@ Regels:
         dag: String(d.dag || '?').substring(0, 2),
         type: ['run','bike','rest'].includes(d.type) ? d.type : 'rest',
         beschrijving: String(d.omschrijving || d.beschrijving || d.type || '').substring(0, 60),
-        detail: String(d.instructie || d.detail || '')
+        detail: buildDetail(d)
       }))
     }));
 
@@ -898,7 +1021,7 @@ function openDetailModal(dag){
   const z=zns[Math.min(zn-1,zns.length-1)]||zns[1];
   document.getElementById('detail-modal-body').innerHTML=`
     <span class="tag tag-${d.type}" style="margin-bottom:12px;display:inline-block">${d.type}</span>
-    <div style="font-size:13px;line-height:1.9;color:var(--text);margin-bottom:12px">${detTxt.replace(/Warming up:/g,'<strong style=\"color:var(--accent2)\">🏃 Warming up:</strong>').replace(/Hoofdwerk:/g,'<strong style=\"color:var(--accent)\">⚡ Hoofdwerk:</strong>').replace(/Cooling down:/g,'<strong style=\"color:var(--accent3)\">🧘 Cooling down:</strong>').replace(/\\n/g,'<br>')}</div>
+    <div style="font-size:13px;line-height:1.9;color:var(--text);margin-bottom:12px">${(()=>{const parts=detTxt.split('|').map(s=>s.trim());return parts.map(s=>s.startsWith('Warming')?'<div style="margin-bottom:6px"><strong style="color:var(--accent2)">🏃 '+s+'</strong></div>':s.startsWith('Hoofdwerk')?'<div style="margin-bottom:6px"><strong style="color:var(--accent)">⚡ '+s+'</strong></div>':s.startsWith('Cooling')?'<div style="margin-bottom:6px"><strong style="color:var(--accent3)">🧘 '+s+'</strong></div>':(s?'<div>'+s+'</div>':'' )).join('');})()}</div>
     <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;font-size:13px;display:flex;gap:20px">
       <div>&#x1F493; <strong>${z.min}&ndash;${z.max} spm</strong> <span style="color:var(--muted)">(${z.pct})</span></div>
       <div>&#x1F4CA; <strong>${z.naam.split("\u2014")[0].trim()}</strong></div>

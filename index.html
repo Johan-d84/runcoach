@@ -4,1540 +4,1166 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="theme-color" content="#0f1117">
-<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>RunCoach</title>
 <link rel="manifest" href="manifest.json">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
-:root{--bg:#0f1117;--surface:#181c27;--surface2:#1e2333;--border:rgba(255,255,255,0.08);--border2:rgba(255,255,255,0.16);--text:#f0f0f0;--muted:#7a8099;--accent:#c8f060;--accent2:#5be3a0;--accent3:#60c8f0;--danger:#f06060;--warn:#f0a860;--radius:14px;--radius-sm:8px}
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Syne:wght@700;800&family=DM+Sans:wght@400;500&display=swap');
+:root{--bg:#0f1117;--s1:#181c27;--s2:#1e2333;--bd:rgba(255,255,255,.08);--bd2:rgba(255,255,255,.15);--t:#f0f0f0;--m:#7a8099;--a:#c8f060;--a2:#5be3a0;--a3:#60c8f0;--dng:#f06060;--wrn:#f0a860;--r:14px;--rs:8px}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;max-width:430px;margin:0 auto;padding-bottom:88px}
+html,body{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--t);display:flex;flex-direction:column;max-width:430px;margin:0 auto}
 button,input,textarea,select{font-family:inherit}
-#setup-screen{min-height:100vh;max-height:100vh;overflow-y:auto;display:flex;flex-direction:column;padding:40px 24px}
-.setup-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:30px;color:var(--accent);margin-bottom:4px}
-.setup-sub{font-size:14px;color:var(--muted);margin-bottom:28px;line-height:1.5}
-.setup-section{margin-bottom:20px}
-.setup-label{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;margin-bottom:8px;display:block}
-.setup-options{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.setup-options.three{grid-template-columns:1fr 1fr 1fr}
-.opt-btn{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--muted);padding:11px 8px;font-size:13px;cursor:pointer;text-align:center;transition:all .15s;line-height:1.3}
-.opt-btn.active{background:rgba(200,240,96,.12);border-color:var(--accent);color:var(--accent)}
-.setup-input{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);color:var(--text);padding:11px 14px;font-size:14px;outline:none}
-.setup-input:focus{border-color:var(--accent)}
-.setup-row{display:flex;gap:8px}
-.setup-row .setup-input{flex:1}
-.api-note{background:rgba(200,240,96,.06);border:1px solid rgba(200,240,96,.2);border-radius:var(--radius-sm);padding:12px 14px;font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:22px}
-.api-note a,.api-note strong{color:var(--accent);text-decoration:none}
-.start-btn{width:100%;background:var(--accent);color:#0f1117;border:none;border-radius:var(--radius);padding:16px;font-family:'Syne',sans-serif;font-weight:700;font-size:16px;cursor:pointer;margin-top:auto}
-.start-btn:active{opacity:.85}
-#app{display:none}
-.topbar{position:sticky;top:0;z-index:100;background:var(--bg);border-bottom:1px solid var(--border);padding:13px 18px 10px;display:flex;align-items:center;justify-content:space-between}
-.topbar-logo{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:var(--accent)}
-.topbar-right{display:flex;align-items:center;gap:10px}
-.topbar-date{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted)}
-.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:430px;background:var(--bg);border-top:1px solid var(--border);display:flex;z-index:100;padding:6px 0 10px}
-.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;cursor:pointer;border:none;background:none;color:var(--muted);font-size:9px;transition:color .15s}
-.nav-item.active{color:var(--accent)}
-.nav-icon{font-size:19px;line-height:1}
-.page{display:none;padding:14px}
+
+/* SHELL */
+.topbar{background:var(--bg);border-bottom:1px solid var(--bd);padding:11px 16px 9px;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.logo{font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--a)}
+.topbar-r{display:flex;align-items:center;gap:8px}
+.tdate{font-family:'DM Mono',monospace;font-size:10px;color:var(--m)}
+.strk-b{font-family:'DM Mono',monospace;font-size:10px;padding:2px 8px;border-radius:20px;background:rgba(200,240,96,.12);color:var(--a);display:none}
+.pages{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.page{display:none;padding:12px}
 .page.active{display:block}
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px}
-.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
-.card-title{font-family:'Syne',sans-serif;font-weight:600;font-size:14px}
-.tag{font-family:'DM Mono',monospace;font-size:10px;padding:3px 8px;border-radius:20px;letter-spacing:.04em;display:inline-block}
-.tag-run{background:rgba(200,240,96,.12);color:var(--accent)}
-.tag-bike{background:rgba(96,200,240,.12);color:var(--accent3)}
-.tag-rest{background:rgba(122,128,153,.15);color:var(--muted)}
-.tag-done{background:rgba(91,227,160,.12);color:var(--accent2)}
-.tag-cross{background:rgba(240,168,96,.12);color:var(--warn)}
-.tag-swim{background:rgba(96,150,240,.12);color:#60a0f0}
-.tag-walk{background:rgba(180,130,240,.12);color:#c090f0}
-.today-hero{background:linear-gradient(135deg,rgba(200,240,96,.08) 0%,rgba(91,227,160,.04) 100%);border:1px solid rgba(200,240,96,.2);border-radius:var(--radius);padding:18px;margin-bottom:12px}
-.today-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--accent);text-transform:uppercase;margin-bottom:6px}
-.today-workout{font-family:'Syne',sans-serif;font-weight:700;font-size:20px;line-height:1.2;margin-bottom:6px}
-.today-detail{font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px}
-.today-actions{display:flex;gap:8px}
-.today-btn{flex:1;padding:11px;border-radius:var(--radius-sm);border:none;font-family:'Syne',sans-serif;font-weight:600;font-size:13px;cursor:pointer}
-.today-btn:active{opacity:.8}
-.today-btn-primary{background:var(--accent);color:#0f1117}
-.today-btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border2)}
-.day-row{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer}
-.day-row:last-child{border-bottom:none}
-.day-dot{width:8px;height:8px;border-radius:50%;margin-top:5px;flex-shrink:0}
-.dot-run{background:var(--accent)}.dot-bike{background:var(--accent3)}.dot-rest{background:var(--muted)}.dot-dng{background:var(--danger)}.dot-done{background:var(--accent2)}.dot-cross{background:var(--warn)}.dot-swim{background:#60a0f0}.dot-walk{background:#c090f0}
-.day-info{flex:1;min-width:0}
-.day-name{font-size:13px;font-weight:500;margin-bottom:2px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.day-desc{font-size:12px;color:var(--muted);line-height:1.4;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.day-actions{display:flex;gap:6px;flex-shrink:0}
-.day-btn{font-size:11px;padding:5px 11px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap}
-.day-btn.done-btn{border-color:var(--accent2);color:var(--accent2)}
-.day-btn:active{opacity:.7}
-.stats-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
-.stat-box{background:var(--surface2);border-radius:var(--radius-sm);padding:10px;text-align:center}
-.stat-val{font-family:'DM Mono',monospace;font-size:18px;font-weight:500;line-height:1.2}
-.stat-lbl{font-size:10px;color:var(--muted);margin-top:2px}
-.prog-bar{height:4px;background:var(--surface2);border-radius:2px;overflow:hidden;margin:8px 0 14px}
-.prog-fill{height:100%;border-radius:2px;background:var(--accent);transition:width .6s ease}
-.week-switcher{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-.week-arrow{background:var(--surface);border:1px solid var(--border);border-radius:50%;width:34px;height:34px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--muted);font-size:18px;flex-shrink:0}
-.week-arrow:active{border-color:var(--accent)}
-.week-label{flex:1;text-align:center;font-family:'DM Mono',monospace;font-size:12px;color:var(--muted)}
-.recovery-row{display:flex;gap:8px;margin-bottom:14px}
-.rec-btn{flex:1;padding:10px 4px;border-radius:var(--radius-sm);border:1px solid var(--border);background:var(--surface2);color:var(--muted);font-size:11px;cursor:pointer;text-align:center;transition:all .15s;line-height:1.4}
-.rec-icon{font-size:18px;display:block;margin-bottom:3px}
-.rec-btn.active-great{background:rgba(200,240,96,.15);border-color:var(--accent);color:var(--accent)}
-.rec-btn.active-ok{background:rgba(91,227,160,.12);border-color:var(--accent2);color:var(--accent2)}
-.rec-btn.active-tired{background:rgba(240,168,96,.12);border-color:var(--warn);color:var(--warn)}
-.rec-btn.active-bad{background:rgba(240,96,96,.12);border-color:var(--danger);color:var(--danger)}
-.chat-area{min-height:240px;max-height:44vh;overflow-y:auto;padding:4px 0;margin-bottom:10px;scroll-behavior:smooth}
-.bubble{margin-bottom:9px;max-width:88%;line-height:1.55;font-size:13px}
-.bubble-ai{background:var(--surface2);border-radius:4px 14px 14px 14px;padding:10px 14px;border:1px solid var(--border)}
-.bubble-user{margin-left:auto;background:rgba(200,240,96,.1);border:1px solid rgba(200,240,96,.22);border-radius:14px 4px 14px 14px;padding:10px 14px}
-.bubble-typing{background:var(--surface2);border-radius:4px 14px 14px 14px;padding:10px 14px;border:1px solid var(--border);color:var(--muted);font-style:italic;font-size:12px}
-.chat-input-row{display:flex;gap:8px;align-items:flex-end}
-.chat-input{flex:1;background:var(--surface);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);padding:10px 13px;font-size:13px;resize:none;min-height:40px;max-height:100px;outline:none;line-height:1.4}
-.chat-input:focus{border-color:var(--accent)}
-.send-btn{background:var(--accent);color:#0f1117;border:none;border-radius:var(--radius-sm);width:40px;height:40px;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.send-btn:active{opacity:.8}
-.quick-btns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
-.quick-btn{font-size:11px;padding:5px 12px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap}
-.quick-btn:active{border-color:var(--accent);color:var(--accent)}
-.meal-block{margin-bottom:14px}
-.meal-title{font-family:'DM Mono',monospace;font-size:11px;color:var(--accent2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:7px}
-.food-item{display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);font-size:13px}
-.food-item:last-child{border-bottom:none}
-.food-kcal{color:var(--muted);font-family:'DM Mono',monospace;font-size:12px;flex-shrink:0;margin-left:8px}
-.upload-area{border:1.5px dashed var(--border2);border-radius:var(--radius);padding:26px 16px;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:12px}
-.upload-area:active{border-color:var(--accent)}
-.upload-icon{font-size:26px;margin-bottom:7px}
-.upload-text{font-size:13px;color:var(--muted);line-height:1.5}
-#file-input{display:none}
-.act-item{display:flex;gap:12px;align-items:flex-start;padding:9px 0;border-bottom:1px solid var(--border)}
-.act-item:last-child{border-bottom:none}
-.act-icon{font-size:20px;flex-shrink:0;margin-top:1px}
-.act-info{flex:1;min-width:0}
-.act-name{font-size:13px;font-weight:500;margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.act-meta{font-size:11px;color:var(--muted);font-family:'DM Mono',monospace}
-.strava-connect-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;border-radius:var(--radius-sm);border:none;background:#fc4c02;color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;cursor:pointer;margin-bottom:10px}
-.strava-connect-btn:active{opacity:.85}
-.strava-connected{display:flex;align-items:center;gap:8px;padding:10px 14px;background:rgba(252,76,2,.08);border:1px solid rgba(252,76,2,.25);border-radius:var(--radius-sm);font-size:13px;margin-bottom:10px}
-.connect-input-group{display:flex;flex-direction:column;gap:8px;margin-bottom:10px}
-.chart-wrap{position:relative;height:155px;margin:4px 0}
-.badge{display:inline-flex;align-items:center;font-size:11px;padding:3px 9px;border-radius:20px;font-family:'DM Mono',monospace}
-.badge-green{background:rgba(91,227,160,.12);color:var(--accent2)}
-.badge-yellow{background:rgba(200,240,96,.12);color:var(--accent)}
-.badge-blue{background:rgba(96,200,240,.12);color:var(--accent3)}
-.badge-orange{background:rgba(252,76,2,.12);color:#fc6030}
-.section-hdr{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:10px}
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);z-index:200;display:none;align-items:flex-end;justify-content:center}
-.modal-overlay.open{display:flex}
-.modal{background:var(--surface);border-radius:var(--radius) var(--radius) 0 0;border:1px solid var(--border);padding:20px;width:100%;max-width:430px;max-height:85vh;overflow-y:auto}
-.modal-title{font-family:'Syne',sans-serif;font-weight:700;font-size:16px;margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
-.modal-close{background:none;border:none;color:var(--muted);font-size:22px;cursor:pointer;padding:0;line-height:1}
-.modal-input{width:100%;background:var(--bg);border:1px solid var(--border2);border-radius:var(--radius-sm);color:var(--text);padding:10px 13px;font-size:13px;resize:none;outline:none;margin-bottom:10px;min-height:80px;line-height:1.5}
-.modal-input:focus{border-color:var(--accent)}
-.modal-btn{width:100%;background:var(--accent);color:#0f1117;border:none;border-radius:var(--radius-sm);padding:13px;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;cursor:pointer}
-.modal-btn:active{opacity:.85}
-.modal-btn-out{width:100%;background:transparent;color:var(--muted);border:1px solid var(--border2);border-radius:var(--radius-sm);padding:11px;font-size:13px;cursor:pointer;margin-top:8px}
-.modal-detail{font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:14px;padding:12px;background:var(--surface2);border-radius:var(--radius-sm)}
-.info-box{background:rgba(96,200,240,.05);border:1px solid rgba(96,200,240,.18);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:10px}
-.info-box a{color:var(--accent3);text-decoration:none}
-.info-box strong{color:var(--text)}
-.loading-dots span{display:inline-block;animation:blink 1.2s infinite}
-.loading-dots span:nth-child(2){animation-delay:.2s}
-.loading-dots span:nth-child(3){animation-delay:.4s}
-@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
-.streak-row{display:flex;gap:5px;margin:6px 0 14px;flex-wrap:wrap}
-.streak-dot{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-family:'DM Mono',monospace;flex-shrink:0}
-.streak-done{background:rgba(200,240,96,.2);color:var(--accent);border:1px solid rgba(200,240,96,.4)}
-.streak-miss{background:var(--surface2);color:var(--muted);border:1px solid var(--border)}
-.streak-future{background:transparent;color:var(--muted);border:1px dashed var(--border)}
-.streak-today{border:1.5px solid var(--accent3) !important}
-.edit-row{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
-.edit-row:last-child{border-bottom:none}
-.edit-day-label{font-size:13px;font-weight:500;width:28px;flex-shrink:0}
-.edit-select{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 8px;font-size:12px;outline:none}
-.edit-desc{flex:2;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:6px 8px;font-size:12px;outline:none}
+.bot{background:var(--bg);border-top:1px solid var(--bd);display:flex;flex-shrink:0;padding:4px 0 8px}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 0;cursor:pointer;border:none;background:none;color:var(--m);font-size:8px;transition:color .15s}
+.ni.active{color:var(--a)}
+.ni-icon{font-size:18px;line-height:1}
+
+/* CARDS */
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:13px;margin-bottom:10px}
+.ch{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.ct{font-family:'Syne',sans-serif;font-weight:700;font-size:13px}
+.tag{font-family:'DM Mono',monospace;font-size:9px;padding:2px 7px;border-radius:20px}
+.tag-run{background:rgba(200,240,96,.12);color:var(--a)}
+.tag-bike{background:rgba(96,200,240,.12);color:var(--a3)}
+.tag-rest{background:rgba(122,128,153,.15);color:var(--m)}
+.tag-done{background:rgba(91,227,160,.12);color:var(--a2)}
+
+/* TODAY */
+.hero{background:linear-gradient(135deg,rgba(200,240,96,.08),rgba(91,227,160,.04));border:1px solid rgba(200,240,96,.18);border-radius:var(--r);padding:16px;margin-bottom:10px}
+.hlbl{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--a);text-transform:uppercase;margin-bottom:5px}
+.htitle{font-family:'Syne',sans-serif;font-weight:800;font-size:19px;line-height:1.2;margin-bottom:5px}
+.hdet{font-size:12px;color:var(--m);line-height:1.5;margin-bottom:13px}
+.hbtns{display:flex;gap:7px}
+.hbtn{flex:1;padding:10px;border-radius:var(--rs);border:none;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer}
+.hbtn-p{background:var(--a);color:#0f1117}
+.hbtn-s{background:var(--s2);color:var(--t);border:1px solid var(--bd2)}
+
+/* STATS */
+.srow{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:10px}
+.sbox{background:var(--s2);border-radius:var(--rs);padding:10px;text-align:center}
+.sval{font-family:'DM Mono',monospace;font-size:18px;font-weight:500;line-height:1.2}
+.slbl{font-size:9px;color:var(--m);margin-top:2px}
+
+/* FEELING */
+.feel-row{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.feel-lbl{font-size:11px;color:var(--m);white-space:nowrap}
+.feel-btns{display:flex;gap:5px;flex:1}
+.fb{flex:1;padding:7px 4px;border-radius:var(--rs);border:1px solid var(--bd);background:var(--s2);color:var(--m);font-size:10px;cursor:pointer;text-align:center;transition:all .15s}
+.fi{font-size:14px;display:block;margin-bottom:2px}
+.fb.ag{background:rgba(200,240,96,.15);border-color:var(--a);color:var(--a)}
+.fb.ao{background:rgba(91,227,160,.12);border-color:var(--a2);color:var(--a2)}
+.fb.at{background:rgba(240,168,96,.12);border-color:var(--wrn);color:var(--wrn)}
+.fb.ab{background:rgba(240,96,96,.12);border-color:var(--dng);color:var(--dng)}
+
+/* DAY ROWS */
+.dr{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--bd)}
+.dr:last-child{border-bottom:none}
+.dot{width:7px;height:7px;border-radius:50%;margin-top:4px;flex-shrink:0}
+.dot-run{background:var(--a)}.dot-bike{background:var(--a3)}.dot-rest{background:var(--m)}.dot-done{background:var(--a2)}.dot-dng{background:var(--dng)}
+.di{flex:1;min-width:0}
+.dn{font-size:12px;font-weight:500;margin-bottom:2px;display:flex;align-items:center;gap:5px;flex-wrap:wrap}
+.dd{font-size:11px;color:var(--m);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.das{display:flex;gap:5px;flex-shrink:0}
+.db{font-size:10px;padding:4px 9px;border-radius:20px;border:1px solid var(--bd2);background:transparent;color:var(--m);cursor:pointer;white-space:nowrap}
+.db.dbd{border-color:var(--a2);color:var(--a2)}
+
+/* WEEK NAV */
+.wnav{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.warr{background:var(--s1);border:1px solid var(--bd);border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--m);font-size:17px}
+.wlbl{flex:1;text-align:center;font-family:'DM Mono',monospace;font-size:11px;color:var(--m)}
+
+/* STREAK DOTS */
+.sdots{display:flex;gap:4px;margin:6px 0 10px;flex-wrap:wrap}
+.sdot{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-family:'DM Mono',monospace}
+.sd-done{background:rgba(200,240,96,.2);color:var(--a);border:1px solid rgba(200,240,96,.4)}
+.sd-miss{background:var(--s2);color:var(--m);border:1px solid var(--bd)}
+.sd-fut{background:transparent;color:var(--m);border:1px dashed var(--bd)}
+.sd-today{border:1.5px solid var(--a3) !important}
+
+/* CHAT */
+.chatw{height:40vh;overflow-y:auto;padding:4px 0;margin-bottom:8px;scroll-behavior:smooth}
+.bbl{margin-bottom:8px;max-width:88%;font-size:12px;line-height:1.55}
+.bbl-ai{background:var(--s2);border-radius:4px 12px 12px 12px;padding:9px 12px;border:1px solid var(--bd)}
+.bbl-u{margin-left:auto;background:rgba(200,240,96,.1);border:1px solid rgba(200,240,96,.2);border-radius:12px 4px 12px 12px;padding:9px 12px}
+.bbl-t{background:var(--s2);border-radius:4px 12px 12px 12px;padding:9px 12px;border:1px solid var(--bd);color:var(--m);font-style:italic;font-size:11px}
+.cinrow{display:flex;gap:7px;align-items:flex-end}
+.cin{flex:1;background:var(--s1);border:1px solid var(--bd2);border-radius:var(--rs);color:var(--t);padding:9px 12px;font-size:12px;resize:none;min-height:38px;max-height:90px;outline:none;line-height:1.4}
+.cin:focus{border-color:var(--a)}
+.csend{background:var(--a);color:#0f1117;border:none;border-radius:var(--rs);width:38px;height:38px;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.qbtns{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:8px}
+.qb{font-size:10px;padding:4px 10px;border-radius:20px;border:1px solid var(--bd2);background:transparent;color:var(--m);cursor:pointer;white-space:nowrap}
+
+/* FOOD */
+.mb{margin-bottom:12px}
+.mt{font-family:'DM Mono',monospace;font-size:10px;color:var(--a2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.fi-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--bd);font-size:12px}
+.fi-row:last-child{border-bottom:none}
+.fkc{color:var(--m);font-family:'DM Mono',monospace;font-size:11px}
+
+/* ACTIVITIES */
+.aitem{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--bd)}
+.aitem:last-child{border-bottom:none}
+.aicon{font-size:18px;flex-shrink:0}
+.ainfo{flex:1;min-width:0}
+.aname{font-size:12px;font-weight:500;margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ameta{font-size:10px;color:var(--m);font-family:'DM Mono',monospace}
+.uarea{border:1.5px dashed var(--bd2);border-radius:var(--r);padding:22px 14px;text-align:center;cursor:pointer;margin-bottom:10px}
+
+/* SETUP */
+.setup-wrap{padding:32px 22px;overflow-y:auto;flex:1;display:flex;flex-direction:column}
+.slogo{font-family:'Syne',sans-serif;font-weight:800;font-size:26px;color:var(--a);margin-bottom:4px}
+.ssub{font-size:13px;color:var(--m);margin-bottom:22px;line-height:1.5}
+.ssec{margin-bottom:18px}
+.slbl{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.08em;color:var(--a);text-transform:uppercase;margin-bottom:7px;display:block}
+.sopts{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.sopts.t3{grid-template-columns:1fr 1fr 1fr}
+.ob{background:var(--s1);border:1px solid var(--bd);border-radius:var(--rs);color:var(--m);padding:10px 7px;font-size:12px;cursor:pointer;text-align:center;transition:all .15s;line-height:1.3}
+.ob.active{background:rgba(200,240,96,.12);border-color:var(--a);color:var(--a)}
+.sinput{width:100%;background:var(--s1);border:1px solid var(--bd);border-radius:var(--rs);color:var(--t);padding:10px 12px;font-size:13px;outline:none}
+.sinput:focus{border-color:var(--a)}
+.srow2{display:flex;gap:7px}
+.srow2 .sinput{flex:1}
+.stbtn{width:100%;background:var(--a);color:#0f1117;border:none;border-radius:var(--r);padding:14px;font-family:'Syne',sans-serif;font-weight:800;font-size:15px;cursor:pointer;margin-top:10px}
+
+/* MODAL */
+.mo{position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:200;display:none;align-items:flex-end;justify-content:center}
+.mo.open{display:flex}
+.md{background:var(--s1);border-radius:var(--r) var(--r) 0 0;border:1px solid var(--bd);padding:18px;width:100%;max-width:430px;max-height:80vh;overflow-y:auto}
+.mdtitle{font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.mclose{background:none;border:none;color:var(--m);font-size:20px;cursor:pointer;padding:0;line-height:1}
+.mdinput{width:100%;background:var(--bg);border:1px solid var(--bd2);border-radius:var(--rs);color:var(--t);padding:9px 12px;font-size:12px;resize:none;outline:none;margin-bottom:9px;min-height:70px;line-height:1.5}
+.mdinput:focus{border-color:var(--a)}
+.mdbtn{width:100%;background:var(--a);color:#0f1117;border:none;border-radius:var(--rs);padding:12px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer}
+.mdbtn-o{width:100%;background:transparent;color:var(--m);border:1px solid var(--bd2);border-radius:var(--rs);padding:10px;font-size:12px;cursor:pointer;margin-top:7px}
+.mddet{font-size:12px;color:var(--m);line-height:1.7;margin-bottom:12px;padding:10px;background:var(--s2);border-radius:var(--rs)}
+
+/* BADGES */
+.badge{display:inline-flex;align-items:center;font-size:10px;padding:2px 8px;border-radius:20px;font-family:'DM Mono',monospace}
+.bg{background:rgba(91,227,160,.12);color:var(--a2)}
+.by{background:rgba(200,240,96,.12);color:var(--a)}
+.bb{background:rgba(96,200,240,.12);color:var(--a3)}
+
+/* SECTION HDR */
+.shdr{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.1em;color:var(--m);text-transform:uppercase;margin-bottom:8px}
+
+/* EDIT */
+.er{display:flex;gap:7px;align-items:center;padding:7px 0;border-bottom:1px solid var(--bd)}
+.er:last-child{border-bottom:none}
+.edl{font-size:12px;font-weight:500;width:26px;flex-shrink:0}
+.esel{flex:1;background:var(--s2);border:1px solid var(--bd);border-radius:6px;color:var(--t);padding:5px 7px;font-size:11px;outline:none}
+.edesc{flex:2;background:var(--s2);border:1px solid var(--bd);border-radius:6px;color:var(--t);padding:5px 7px;font-size:11px;outline:none}
+
+/* HR ZONES */
+.zone-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--bd)}
+.zone-row:last-child{border-bottom:none}
+.zone-bar{width:4px;height:34px;border-radius:2px;flex-shrink:0}
+.zone-info{flex:1}
+.zone-name{font-size:12px;font-weight:500;margin-bottom:2px}
+.zone-detail{font-size:10px;color:var(--m)}
+.zone-pct{font-family:'DM Mono',monospace;font-size:10px;color:var(--m);flex-shrink:0}
+
+/* LOADING */
+.ld span{display:inline-block;animation:bl 1.2s infinite}
+.ld span:nth-child(2){animation-delay:.2s}
+.ld span:nth-child(3){animation-delay:.4s}
+@keyframes bl{0%,80%,100%{opacity:.2}40%{opacity:1}}
+
+input[type=file]{display:none}
 textarea{overflow:hidden}
 </style>
 </head>
 <body>
 
-<div id="login-screen" style="min-height:100vh;display:flex;flex-direction:column;padding:40px 24px;background:var(--bg)">
-  <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:30px;color:var(--accent);margin-bottom:4px">RunCoach</div>
-  <div style="font-size:14px;color:var(--muted);margin-bottom:32px;line-height:1.5">Selecteer je profiel of maak een nieuw aan</div>
-
-  <div id="profiles-list" style="margin-bottom:20px"></div>
-
-  <button class="start-btn" id="new-profile-btn" style="background:transparent;border:1px solid var(--accent);color:var(--accent);margin-top:0">+ Nieuw profiel aanmaken</button>
-  <div id="login-status" style="font-size:12px;color:var(--muted);text-align:center;margin-top:12px"></div>
+<!-- LOGIN -->
+<div id="login-screen" style="display:flex;flex-direction:column;height:100%;padding:36px 22px;overflow-y:auto">
+  <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:28px;color:var(--a);margin-bottom:4px">RunCoach</div>
+  <div style="font-size:13px;color:var(--m);margin-bottom:28px;line-height:1.5">Selecteer je profiel of maak een nieuw aan</div>
+  <div id="login-list" style="margin-bottom:16px"></div>
+  <button class="stbtn" id="new-profile-btn" style="background:transparent;border:1px solid var(--a);color:var(--a)">+ Nieuw profiel aanmaken</button>
+  <div id="login-status" style="font-size:12px;color:var(--m);text-align:center;margin-top:10px"></div>
 </div>
 
-<div id="setup-screen" style="display:none">
-  <button onclick="showLoginScreen()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:0;margin-bottom:16px;text-align:left">← Terug</button>
-  <div class="setup-logo">RunCoach</div>
-  <div class="setup-sub">Jouw persoonlijke hardloop- en fietscoach — gebouwd op AI</div>
-  <div class="api-note">🔑 Vereist een <strong>Anthropic API key</strong> via <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>. Alles blijft lokaal in je browser.</div>
-  <div class="setup-section"><label class="setup-label">Anthropic API Key</label><input class="setup-input" type="password" id="setup-api" placeholder="sk-ant-api03-..."></div>
-  <div class="setup-section"><label class="setup-label">Jouw naam</label><input class="setup-input" type="text" id="setup-name" placeholder="Naam"></div>
-
-  <div class="setup-section"><label class="setup-label">Niveau</label><div class="setup-options three"><button class="opt-btn active" data-group="run-level" data-val="beginner">Beginner<br><span style="font-size:9px;opacity:.7">0-5km</span></button><button class="opt-btn" data-group="run-level" data-val="intermediate">Intermediate<br><span style="font-size:9px;opacity:.7">5-15km</span></button><button class="opt-btn" data-group="run-level" data-val="gevorderd">Gevorderd<br><span style="font-size:9px;opacity:.7">15km+</span></button></div></div>
-  <div class="setup-section"><label class="setup-label">Doel</label><div class="setup-options"><button class="opt-btn active" data-group="goal" data-val="5km opbouwen">5km opbouwen</button><button class="opt-btn" data-group="goal" data-val="10km lopen">10km lopen</button><button class="opt-btn" data-group="goal" data-val="halve marathon">Halve marathon</button><button class="opt-btn" data-group="goal" data-val="marathon">Marathon</button><button class="opt-btn" data-group="goal" data-val="fitter worden">Fitter worden</button></div></div>
-  <div class="setup-section"><label class="setup-label">Fietsen meenemen?</label><div class="setup-options"><button class="opt-btn active" data-group="cycling" data-val="ja">Ja, fietsen ook</button><button class="opt-btn" data-group="cycling" data-val="nee">Nee, alleen lopen</button></div></div>
-  <div class="setup-section"><label class="setup-label">Trainingsdagen/week</label><div class="setup-options three"><button class="opt-btn" data-group="days" data-val="3">3×</button><button class="opt-btn active" data-group="days" data-val="4">4×</button><button class="opt-btn" data-group="days" data-val="5">5×</button></div></div>
-  <div class="setup-section"><label class="setup-label">Aantal weken schema</label><div class="setup-options"><button class="opt-btn" data-group="weeks" data-val="8">8 weken</button><button class="opt-btn active" data-group="weeks" data-val="12">12 weken</button><button class="opt-btn" data-group="weeks" data-val="16">16 weken</button><button class="opt-btn" data-group="weeks" data-val="20">20 weken</button></div></div>
-  <div class="setup-section"><label class="setup-label">Gewicht & lengte</label><div class="setup-row"><input class="setup-input" type="number" id="setup-weight" placeholder="kg"><input class="setup-input" type="number" id="setup-height" placeholder="cm"></div></div>
-  <div class="setup-section"><label class="setup-label">Huidige conditie</label>
-    <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Hoe ver kun je nu comfortabel lopen?</div>
-    <div class="setup-options t3">
-      <button class="opt-btn" data-group="current-dist" data-val="2">~2 km</button>
-      <button class="opt-btn" data-group="current-dist" data-val="5">~5 km</button>
-      <button class="opt-btn active" data-group="current-dist" data-val="10">~10 km</button>
-      <button class="opt-btn" data-group="current-dist" data-val="15">~15 km</button>
-      <button class="opt-btn" data-group="current-dist" data-val="21">~21 km</button>
-      <button class="opt-btn" data-group="current-dist" data-val="30">30+ km</button>
-    </div>
-  </div>
-  <div class="setup-section"><label class="setup-label">Leeftijd & max hartslag</label><div class="setup-row"><input class="setup-input" type="number" id="setup-age" placeholder="Leeftijd"><input class="setup-input" type="number" id="setup-mhr" placeholder="Max hartslag (opt.)"></div><div style="font-size:11px;color:var(--muted);margin-top:5px">Max hartslag wordt berekend als 220 minus leeftijd als je het leeg laat.</div></div>
-  <button class="start-btn" id="start-btn">Start met trainen →</button>
+<!-- SETUP -->
+<div id="setup-screen" style="display:none;height:100%">
+<div class="setup-wrap">
+  <div class="slogo">RunCoach</div>
+  <div class="ssub">Maak je profiel aan</div>
+  <div class="ssec"><label class="slbl">Jouw naam</label><input class="sinput" type="text" id="s-name" placeholder="Naam"></div>
+  <div class="ssec"><label class="slbl">Anthropic API Key</label><input class="sinput" type="password" id="s-api" placeholder="sk-ant-api03-..."></div>
+  <div class="ssec"><label class="slbl">Niveau</label><div class="sopts t3">
+    <button class="ob active" data-g="lvl" data-v="beginner">Beginner<br><span style="font-size:9px;opacity:.6">0–5km</span></button>
+    <button class="ob" data-g="lvl" data-v="intermediate">Intermediate<br><span style="font-size:9px;opacity:.6">5–15km</span></button>
+    <button class="ob" data-g="lvl" data-v="gevorderd">Gevorderd<br><span style="font-size:9px;opacity:.6">15km+</span></button>
+  </div></div>
+  <div class="ssec"><label class="slbl">Doel</label><div class="sopts">
+    <button class="ob active" data-g="goal" data-v="5km opbouwen">5km opbouwen</button>
+    <button class="ob" data-g="goal" data-v="10km lopen">10km lopen</button>
+    <button class="ob" data-g="goal" data-v="halve marathon">Halve marathon</button>
+    <button class="ob" data-g="goal" data-v="marathon">Marathon</button>
+    <button class="ob" data-g="goal" data-v="fitter worden">Fitter worden</button>
+  </div></div>
+  <div class="ssec"><label class="slbl">Hoe ver kun je nu lopen?</label><div class="sopts t3">
+    <button class="ob" data-g="dist" data-v="2">~2km</button>
+    <button class="ob" data-g="dist" data-v="5">~5km</button>
+    <button class="ob active" data-g="dist" data-v="10">~10km</button>
+    <button class="ob" data-g="dist" data-v="15">~15km</button>
+    <button class="ob" data-g="dist" data-v="21">~21km</button>
+    <button class="ob" data-g="dist" data-v="30">30+km</button>
+  </div></div>
+  <div class="ssec"><label class="slbl">Fietsen meenemen?</label><div class="sopts">
+    <button class="ob active" data-g="cyc" data-v="ja">Ja</button>
+    <button class="ob" data-g="cyc" data-v="nee">Nee</button>
+  </div></div>
+  <div class="ssec"><label class="slbl">Trainingsdagen/week</label><div class="sopts t3">
+    <button class="ob" data-g="days" data-v="3">3×</button>
+    <button class="ob active" data-g="days" data-v="4">4×</button>
+    <button class="ob" data-g="days" data-v="5">5×</button>
+  </div></div>
+  <div class="ssec"><label class="slbl">Aantal weken schema</label><div class="sopts">
+    <button class="ob" data-g="weeks" data-v="8">8 weken</button>
+    <button class="ob active" data-g="weeks" data-v="12">12 weken</button>
+    <button class="ob" data-g="weeks" data-v="16">16 weken</button>
+    <button class="ob" data-g="weeks" data-v="20">20 weken</button>
+  </div></div>
+  <div class="ssec"><label class="slbl">Leeftijd & max hartslag</label><div class="srow2">
+    <input class="sinput" type="number" id="s-age" placeholder="Leeftijd">
+    <input class="sinput" type="number" id="s-mhr" placeholder="Max hartslag (opt.)">
+  </div></div>
+  <div class="ssec"><label class="slbl">Gewicht & lengte</label><div class="srow2">
+    <input class="sinput" type="number" id="s-wt" placeholder="kg">
+    <input class="sinput" type="number" id="s-ht" placeholder="cm">
+  </div></div>
+  <button class="stbtn" id="s-go">Profiel aanmaken →</button>
 </div>
-<div id="app">
+</div>
+
+<!-- APP -->
+<div id="app" style="display:none;flex-direction:column;height:100%">
   <div class="topbar">
-    <div class="topbar-logo">RunCoach</div>
-    <div class="topbar-right"><div class="topbar-date" id="topbar-date"></div><div id="sync-status" style="font-size:9px;color:var(--muted);font-family:'DM Mono',monospace"></div><span class="badge badge-yellow" id="streak-badge" style="display:none"></span></div>
+    <div class="logo">RunCoach</div>
+    <div class="topbar-r">
+      <div class="tdate" id="tdate"></div>
+      <div class="strk-b" id="strkb"></div>
+    </div>
   </div>
 
-  <div id="page-today" class="page active">
-    <div id="today-hero-wrap"></div>
-    <div class="section-hdr">Week voortgang</div>
-    <div class="stats-row" style="grid-template-columns:1fr 1fr">
-      <div class="stat-box"><div class="stat-val" id="stat-km">—</div><div class="stat-lbl">km gepland</div></div>
-      <div class="stat-box"><div class="stat-val" id="stat-done">0/0</div><div class="stat-lbl">sessies voltooid</div></div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-      <span style="font-size:11px;color:var(--muted);white-space:nowrap">Gevoel:</span>
-      <div style="display:flex;gap:5px;flex:1">
-        <button class="rec-btn" data-feel="great" onclick="logFeeling('great',this)" style="padding:6px 4px;font-size:10px"><span class="rec-icon" style="font-size:14px;margin-bottom:1px">💪</span>Top</button>
-        <button class="rec-btn" data-feel="ok" onclick="logFeeling('ok',this)" style="padding:6px 4px;font-size:10px"><span class="rec-icon" style="font-size:14px;margin-bottom:1px">😊</span>Goed</button>
-        <button class="rec-btn" data-feel="tired" onclick="logFeeling('tired',this)" style="padding:6px 4px;font-size:10px"><span class="rec-icon" style="font-size:14px;margin-bottom:1px">😴</span>Moe</button>
-        <button class="rec-btn" data-feel="bad" onclick="logFeeling('bad',this)" style="padding:6px 4px;font-size:10px"><span class="rec-icon" style="font-size:14px;margin-bottom:1px">🤕</span>Ziek</button>
+  <div class="pages">
+
+    <!-- VANDAAG -->
+    <div id="p-today" class="page active">
+      <div id="hero-wrap"></div>
+      <div class="srow">
+        <div class="sbox"><div class="sval" id="s-km">—</div><div class="slbl">km gepland</div></div>
+        <div class="sbox"><div class="sval" id="s-done">0/0</div><div class="slbl">sessies voltooid</div></div>
       </div>
-    </div>
-    <div class="section-hdr">Week <span id="week-nr-today">1</span> — trainingen</div>
-    <div class="card" style="padding:0 14px"><div id="today-week-list" style="padding:2px 0"></div></div>
-  </div>
-
-  <div id="page-schema" class="page">
-    <div class="week-switcher">
-      <button class="week-arrow" id="prev-week">‹</button>
-      <div class="week-label" id="week-label">Week 1</div>
-      <button class="week-arrow" id="next-week">›</button>
-    </div>
-    <div class="card">
-      <div class="card-header">
-        <div class="card-title">Trainingsschema</div>
-        <div style="display:flex;gap:6px">
-          <button class="day-btn" id="edit-schema-btn" style="border-color:var(--accent3);color:var(--accent3)">✏️</button>
-          <button class="day-btn" id="delete-schema-btn" style="border-color:var(--danger);color:var(--danger)">🗑</button>
-          <button class="day-btn" id="generate-schema-btn" style="border-color:var(--accent);color:var(--accent)">⟳ Genereer</button>
+      <div class="feel-row">
+        <span class="feel-lbl">Gevoel:</span>
+        <div class="feel-btns">
+          <button class="fb" data-f="great" onclick="logFeel('great',this)"><span class="fi">💪</span>Top</button>
+          <button class="fb" data-f="ok" onclick="logFeel('ok',this)"><span class="fi">😊</span>Goed</button>
+          <button class="fb" data-f="tired" onclick="logFeel('tired',this)"><span class="fi">😴</span>Moe</button>
+          <button class="fb" data-f="bad" onclick="logFeel('bad',this)"><span class="fi">🤕</span>Ziek</button>
         </div>
       </div>
-      <div id="schema-list"><div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">Druk op Genereer voor je persoonlijk schema</div></div>
+      <div class="shdr">Week <span id="wk-nr">1</span> — trainingen</div>
+      <div class="card" style="padding:0 13px"><div id="day-list"></div></div>
     </div>
-    <div class="card" id="streak-card" style="display:none">
-      <div class="card-header"><div class="card-title">Voortgang week</div><span class="badge badge-yellow" id="streak-pct">0%</span></div>
-      <div class="streak-row" id="streak-dots"></div>
-    </div>
-  </div>
 
-  <div id="page-stats" class="page">
-    <div class="section-hdr">Jouw voortgang</div>
-    <div class="card"><div class="card-header"><div class="card-title">Kilometers per week</div><span class="badge badge-yellow" id="total-km-badge">—</span></div><div class="chart-wrap"><canvas id="chart-km"></canvas></div></div>
-    <div class="card"><div class="card-header"><div class="card-title">Completie %</div><span class="badge badge-blue" id="avg-comp-badge">—</span></div><div class="chart-wrap"><canvas id="chart-sessions"></canvas></div></div>
-    <div class="card"><div class="card-header"><div class="card-title">Type verdeling</div></div><div style="display:flex;align-items:center;justify-content:center;height:155px;gap:16px"><canvas id="chart-types" style="max-height:155px;max-width:155px"></canvas><div id="chart-types-legend" style="font-size:12px;display:flex;flex-direction:column;gap:7px"></div></div></div>
-    <div class="card" id="import-stats-card" style="display:none"><div class="card-header"><div class="card-title">Geïmporteerde activiteiten</div><span class="badge badge-orange" id="strava-count-badge">0</span></div><div class="chart-wrap"><canvas id="chart-strava-km"></canvas></div></div>
-  </div>
-
-  <div id="page-activities" class="page">
-    <div class="section-hdr">Koppel sport-app</div>
-    <div class="card">
-      <div class="card-header"><div class="card-title">Strava</div><span class="badge badge-orange" id="strava-status-badge">Niet gekoppeld</span></div>
-      <div id="strava-connect-area">
-        <div class="info-box">Maak gratis Strava API-app aan:<br>1. <a href="https://www.strava.com/settings/api" target="_blank">strava.com/settings/api</a><br>2. Authorization Callback Domain: <strong>localhost</strong><br>3. Vul Client ID en Secret in:</div>
-        <div class="connect-input-group"><input class="setup-input" type="text" id="strava-client-id" placeholder="Client ID"><input class="setup-input" type="password" id="strava-client-secret" placeholder="Client Secret"></div>
-        <button class="strava-connect-btn" id="strava-auth-btn">🔗 Verbinden met Strava</button>
+    <!-- SCHEMA -->
+    <div id="p-schema" class="page">
+      <div class="wnav">
+        <button class="warr" id="pw">‹</button>
+        <div class="wlbl" id="wlbl">Week 1</div>
+        <button class="warr" id="nw">›</button>
       </div>
-      <div id="strava-connected-area" style="display:none">
-        <div class="strava-connected">✅ <span id="strava-athlete-name">Gekoppeld</span></div>
-        <button class="day-btn" id="strava-sync-btn" style="width:100%;text-align:center;padding:10px;margin-bottom:8px">↻ Synchroniseer activiteiten</button>
-        <button class="day-btn" id="strava-disconnect-btn" style="color:var(--danger);border-color:var(--danger)">Ontkoppelen</button>
-      </div>
-    </div>
-    <div class="card">
-      <div class="card-header"><div class="card-title">CSV importeren</div><span class="badge badge-blue">Strava & Garmin</span></div>
-      <div class="info-box"><strong>Strava:</strong> Profiel → Mijn account → Exporteer archief → activities.csv<br><strong>Garmin:</strong> <a href="https://connect.garmin.com/modern/activities" target="_blank">connect.garmin.com</a> → Activities → Export CSV</div>
-      <div class="upload-area" id="upload-area"><div class="upload-icon">📂</div><div class="upload-text">Tik om CSV te selecteren<br><small>Strava activities.csv of Garmin export</small></div></div>
-      <input type="file" id="file-input" accept=".csv,.CSV">
-      <div id="csv-status"></div>
-    </div>
-    <div class="card" id="all-activities-card" style="display:none">
-      <div class="card-header"><div class="card-title">Recente activiteiten</div><span class="badge badge-green" id="activities-count">0</span></div>
-      <div id="all-activities-list"></div>
-    </div>
-  </div>
-
-  <div id="page-food" class="page">
-    <div class="section-hdr">Voedingsplan</div>
-    <div class="card">
-      <div class="card-header"><div class="card-title">Vandaag</div><button class="day-btn" id="generate-food-btn" style="border-color:var(--accent2);color:var(--accent2)">⟳ Genereer</button></div>
-      <div id="food-plan"><div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">Genereer je voedingsplan voor vandaag</div></div>
-    </div>
-    <div class="card" id="macro-card" style="display:none">
-      <div class="card-header"><div class="card-title">Macro's vandaag</div></div>
-      <div class="stats-row"><div class="stat-box"><div class="stat-val" id="m-kcal">—</div><div class="stat-lbl">kcal</div></div><div class="stat-box"><div class="stat-val" id="m-prot">—</div><div class="stat-lbl">eiwit g</div></div><div class="stat-box"><div class="stat-val" id="m-carb">—</div><div class="stat-lbl">koolhyd g</div></div></div>
-    </div>
-  </div>
-
-  <div id="page-coach" class="page">
-    <div class="section-hdr">AI Coach</div>
-    <div class="chat-area" id="chat-area"></div>
-    <div class="quick-btns">
-      <button class="quick-btn" onclick="sendQuick('Hoe herstel ik goed na mijn training van gisteren?')">🔄 Herstel</button>
-      <button class="quick-btn" onclick="sendQuick('Analyseer mijn recente activiteiten en geef coaching advies')">📊 Analyseer</button>
-      <button class="quick-btn" onclick="sendQuick('Mijn benen zijn zwaar — moet ik toch trainen?')">😴 Ben moe</button>
-      <button class="quick-btn" onclick="sendQuick('Wat eten voor een lange duurloop morgen?')">🥗 Pre-run</button>
-      <button class="quick-btn" onclick="sendQuick('Maak mijn schema deze week iets lichter')">✏️ Lichter</button>
-    </div>
-    <div class="chat-input-row">
-      <textarea class="chat-input" id="chat-input" placeholder="Vraag je coach iets..." rows="1"></textarea>
-      <button class="send-btn" id="send-btn">↑</button>
-    </div>
-  </div>
-
-  <div id="page-profile" class="page">
-    <div class="section-hdr">Mijn profiel</div>
-    <div class="card" id="profile-card"></div>
-    <div class="card">
-      <div class="card-header"><div class="card-title">Hartslagzones</div><span class="badge badge-yellow" id="hr-mhr-badge">Max: ? spm</span></div>
-      <div id="hr-zones-list"></div>
-      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:8px">Pas aan:</div>
-        <div style="display:flex;gap:8px;margin-bottom:8px">
-          <div style="flex:1"><div style="font-size:10px;color:var(--muted);margin-bottom:4px">Leeftijd</div><input class="setup-input" type="number" id="edit-age" placeholder="30" style="font-size:12px;padding:7px 10px"></div>
-          <div style="flex:1"><div style="font-size:10px;color:var(--muted);margin-bottom:4px">Max hartslag</div><input class="setup-input" type="number" id="edit-mhr" placeholder="190" style="font-size:12px;padding:7px 10px"></div>
+      <div class="card">
+        <div class="ch">
+          <div class="ct">Trainingsschema</div>
+          <div style="display:flex;gap:5px">
+            <button class="db" id="edit-btn" style="border-color:var(--a3);color:var(--a3)">✏️</button>
+            <button class="db" id="del-btn" style="border-color:var(--dng);color:var(--dng)">🗑</button>
+            <button class="db" id="gen-btn" style="border-color:var(--a);color:var(--a)">⟳ Genereer</button>
+          </div>
         </div>
-        <button class="day-btn" id="save-hr-btn" style="width:100%;text-align:center;padding:8px;border-color:var(--accent);color:var(--accent)">Hartslagzones opslaan</button>
+        <div id="schema-list"><div style="text-align:center;padding:20px;color:var(--m);font-size:12px">Druk op Genereer voor je schema</div></div>
+      </div>
+      <div class="card" id="strk-card" style="display:none">
+        <div class="ch"><div class="ct">Week voortgang</div><span class="badge by" id="strk-pct">0%</span></div>
+        <div class="sdots" id="sdots"></div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-header"><div class="card-title">Feedback aan coach</div></div>
-      <textarea class="modal-input" id="feedback-input" placeholder="Hoe gaat het? Wat wil je aanpassen?"></textarea>
-      <button class="modal-btn" id="feedback-btn">Verstuur naar coach</button>
-    </div>
-    <div class="card">
-      <div class="card-header"><div class="card-title">API instellingen</div></div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        <label class="setup-label" style="margin-bottom:0">Anthropic API Key</label>
-        <input class="setup-input" type="password" id="edit-apikey" placeholder="sk-ant-api03-...">
-        <label class="setup-label" style="margin-bottom:0;margin-top:4px">Proxy URL (Cloudflare Worker)</label>
-        <input class="setup-input" type="url" id="edit-proxy" placeholder="https://jouw-worker.workers.dev">
-        <button class="modal-btn" id="save-settings-btn" style="margin-top:4px">Instellingen opslaan</button>
+
+    <!-- COACH -->
+    <div id="p-coach" class="page">
+      <div class="shdr">AI Coach</div>
+      <div class="chatw" id="chatw"></div>
+      <div class="qbtns">
+        <button class="qb" onclick="sq('Hoe herstel ik na mijn training van gisteren?')">🔄 Herstel</button>
+        <button class="qb" onclick="sq('Analyseer mijn voortgang en geef advies')">📊 Analyseer</button>
+        <button class="qb" onclick="sq('Mijn benen zijn zwaar, toch trainen?')">😴 Moe</button>
+        <button class="qb" onclick="sq('Wat eten voor een lange duurloop morgen?')">🥗 Pre-run</button>
+        <button class="qb" onclick="sq('Maak mijn schema deze week iets lichter')">✏️ Lichter</button>
+      </div>
+      <div class="cinrow">
+        <textarea class="cin" id="cin" placeholder="Vraag je coach..." rows="1"></textarea>
+        <button class="csend" id="csend">↑</button>
       </div>
     </div>
-    <div class="card">
-      <div class="card-header"><div class="card-title">Synchronisatie</div><span class="badge badge-blue">Cloud</span></div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Je data wordt automatisch gesynchroniseerd. Open de app op een ander apparaat om dezelfde data te zien.</div>
-      <button class="day-btn" id="sync-now-btn" style="width:100%;text-align:center;padding:10px;border-color:var(--accent3);color:var(--accent3)">↻ Nu synchroniseren</button>
-      <div id="sync-msg" style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center"></div>
-      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Jouw apparaat-ID: <span id="show-userid" style="font-family:'DM Mono',monospace;color:var(--accent3)"></span></div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.5">Gebruik op alle apparaten hetzelfde ID om data te synchroniseren:</div>
-        <input class="setup-input" type="text" id="edit-userid" placeholder="user_xb09d2ivqo" style="margin-bottom:8px;font-size:12px">
-        <button class="day-btn" id="save-userid-btn" style="width:100%;text-align:center;padding:8px">ID opslaan en synchroniseren</button>
+
+    <!-- VOEDING -->
+    <div id="p-food" class="page">
+      <div class="shdr">Voedingsplan</div>
+      <div class="card">
+        <div class="ch"><div class="ct">Vandaag</div><button class="db" id="gen-food" style="border-color:var(--a2);color:var(--a2)">⟳ Genereer</button></div>
+        <div id="food-plan"><div style="text-align:center;padding:20px;color:var(--m);font-size:12px">Genereer je voedingsplan</div></div>
+      </div>
+      <div class="card" id="macro-c" style="display:none">
+        <div class="ch"><div class="ct">Macro's</div></div>
+        <div class="srow" style="grid-template-columns:1fr 1fr 1fr">
+          <div class="sbox"><div class="sval" id="m-kc">—</div><div class="slbl">kcal</div></div>
+          <div class="sbox"><div class="sval" id="m-pr">—</div><div class="slbl">eiwit g</div></div>
+          <div class="sbox"><div class="sval" id="m-cb">—</div><div class="slbl">koolhyd g</div></div>
+        </div>
       </div>
     </div>
-    <div class="card">
-      <div class="card-header"><div class="card-title">API Key instellen</div></div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Vul hier je Anthropic API key in. Dit is per apparaat apart nodig.</div>
-      <input class="setup-input" type="password" id="edit-apikey" placeholder="sk-ant-api03-..." style="margin-bottom:8px">
-      <button class="modal-btn" id="save-apikey-btn">API key opslaan</button>
-      <div id="apikey-status" style="font-size:11px;color:var(--accent2);margin-top:8px;text-align:center"></div>
-    </div>
-    <div class="card">
-      <div class="card-header"><div class="card-title">Synchronisatie</div><span class="badge badge-blue">Cloud</span></div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5">Data wordt automatisch gesynchroniseerd tussen al je apparaten.</div>
-      <button class="day-btn" id="sync-now-btn" style="width:100%;text-align:center;padding:10px;border-color:var(--accent3);color:var(--accent3)">↻ Nu synchroniseren</button>
-      <div id="sync-msg" style="font-size:11px;color:var(--muted);margin-top:8px;text-align:center"></div>
-      <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-        <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Jouw apparaat-ID: <span id="show-userid" style="font-family:'DM Mono',monospace;color:var(--accent3)"></span></div>
-        <div style="font-size:11px;color:var(--muted);margin-bottom:8px;line-height:1.5">Gebruik op alle apparaten hetzelfde ID om data te synchroniseren:</div>
-        <input class="setup-input" type="text" id="edit-userid" placeholder="user_xb09d2ivqo" style="margin-bottom:8px;font-size:12px">
-        <button class="day-btn" id="save-userid-btn" style="width:100%;text-align:center;padding:8px">ID opslaan en synchroniseren</button>
+
+    <!-- DATA -->
+    <div id="p-data" class="page">
+      <div class="shdr">Activiteiten importeren</div>
+      <div class="card">
+        <div class="ch"><div class="ct">CSV upload</div><span class="badge bb">Strava & Garmin</span></div>
+        <div style="font-size:11px;color:var(--m);line-height:1.6;margin-bottom:10px;padding:9px;background:var(--s2);border-radius:var(--rs)">
+          <strong style="color:var(--t)">Strava:</strong> Profiel → Mijn account → Exporteer archief → activities.csv<br>
+          <strong style="color:var(--t)">Garmin:</strong> connect.garmin.com → Activities → Export CSV
+        </div>
+        <div class="uarea" id="uarea"><div style="font-size:22px;margin-bottom:6px">📂</div><div style="font-size:12px;color:var(--m)">Tik om CSV te selecteren</div></div>
+        <input type="file" id="ffile" accept=".csv">
+        <div id="csv-st"></div>
+      </div>
+      <div class="card" id="acts-card" style="display:none">
+        <div class="ch"><div class="ct">Recente activiteiten</div><span class="badge bg" id="acts-cnt">0</span></div>
+        <div id="acts-list"></div>
       </div>
     </div>
-    <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
-      <button class="day-btn" id="switch-profile-btn" style="border-color:var(--accent3);color:var(--accent3)">↩ Wissel profiel</button>
-      <button class="day-btn" id="reset-btn" style="color:var(--danger);border-color:var(--danger)">App resetten</button>
+
+    <!-- PROFIEL -->
+    <div id="p-profile" class="page">
+      <div class="shdr">Mijn profiel</div>
+      <div class="card" id="prof-card"></div>
+      <div class="card">
+        <div class="ch"><div class="ct">Hartslagzones</div><span class="badge by" id="hr-badge"></span></div>
+        <div id="hr-zones"></div>
+        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--bd)">
+          <div style="font-size:11px;color:var(--m);margin-bottom:8px">Aanpassen:</div>
+          <div style="display:flex;gap:8px;margin-bottom:8px">
+            <div style="flex:1"><div style="font-size:10px;color:var(--m);margin-bottom:4px">Leeftijd</div><input class="sinput" type="number" id="edit-age" placeholder="30" style="font-size:12px;padding:7px 10px"></div>
+            <div style="flex:1"><div style="font-size:10px;color:var(--m);margin-bottom:4px">Max hartslag</div><input class="sinput" type="number" id="edit-mhr" placeholder="190" style="font-size:12px;padding:7px 10px"></div>
+          </div>
+          <button class="db" id="save-hr" style="width:100%;text-align:center;padding:8px;border-color:var(--a);color:var(--a)">Opslaan</button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">API Key</div></div>
+        <input class="sinput" type="password" id="edit-api" placeholder="sk-ant-api03-..." style="margin-bottom:8px">
+        <button class="db" id="save-api" style="width:100%;text-align:center;padding:8px;border-color:var(--a);color:var(--a)">API key opslaan</button>
+        <div id="api-msg" style="font-size:11px;color:var(--a2);margin-top:6px;text-align:center"></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Synchronisatie</div><span class="badge bb">Cloud</span></div>
+        <div style="font-size:11px;color:var(--m);margin-bottom:10px;line-height:1.5">Data wordt automatisch gesynchroniseerd tussen al je apparaten.</div>
+        <button class="db" id="sync-btn" style="width:100%;text-align:center;padding:10px;border-color:var(--a3);color:var(--a3)">↻ Nu synchroniseren</button>
+        <div id="sync-msg" style="font-size:11px;color:var(--m);margin-top:8px;text-align:center"></div>
+      </div>
+      <div class="card">
+        <div class="ch"><div class="ct">Feedback aan coach</div></div>
+        <textarea class="mdinput" id="fb-in" placeholder="Hoe gaat het? Wat wil je aanpassen?"></textarea>
+        <button class="mdbtn" id="fb-btn">Verstuur naar coach</button>
+      </div>
+      <div style="margin-top:10px;display:flex;gap:8px;justify-content:center">
+        <button class="db" id="switch-btn" style="border-color:var(--a3);color:var(--a3)">↩ Wissel profiel</button>
+        <button class="db" id="reset-btn" style="color:var(--dng);border-color:var(--dng)">App resetten</button>
+      </div>
     </div>
+
   </div>
 
-  <nav class="bottom-nav">
-    <button class="nav-item active" data-page="today"><span class="nav-icon">🏠</span>Vandaag</button>
-    <button class="nav-item" data-page="schema"><span class="nav-icon">📅</span>Schema</button>
-    <button class="nav-item" data-page="coach"><span class="nav-icon">💬</span>Coach</button>
-    <button class="nav-item" data-page="activities"><span class="nav-icon">📂</span>Data</button>
-    <button class="nav-item" id="meer-nav-btn"><span class="nav-icon">⋯</span>Meer</button>
+  <nav class="bot">
+    <button class="ni active" data-p="today"><span class="ni-icon">🏠</span>Vandaag</button>
+    <button class="ni" data-p="schema"><span class="ni-icon">📅</span>Schema</button>
+    <button class="ni" data-p="coach"><span class="ni-icon">💬</span>Coach</button>
+    <button class="ni" data-p="food"><span class="ni-icon">🥗</span>Voeding</button>
+    <button class="ni" data-p="profile"><span class="ni-icon">👤</span>Profiel</button>
   </nav>
-  <div id="meer-menu" style="display:none;position:fixed;bottom:58px;left:0;right:0;max-width:430px;margin:0 auto;background:var(--bg);border-top:1px solid var(--border);padding:16px;z-index:150">
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <button onclick="goMeer('food')" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;color:var(--text);font-size:13px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px"><span style="font-size:26px">🥗</span>Voeding</button>
-      <button onclick="goMeer('profile')" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;color:var(--text);font-size:13px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px"><span style="font-size:26px">👤</span>Profiel</button>
-    </div>
+</div>
+
+<!-- MODALS -->
+<div class="mo" id="log-mo">
+  <div class="md">
+    <div class="mdtitle">Training loggen <button class="mclose" onclick="closeM('log-mo')">✕</button></div>
+    <div id="log-di" style="font-size:12px;color:var(--m);margin-bottom:8px"></div>
+    <div id="log-det" class="mddet" style="display:none"></div>
+    <textarea class="mdinput" id="log-in" placeholder="Hoe ging het? (km, tijd, gevoel)"></textarea>
+    <button class="mdbtn" id="log-sub">Loggen + AI feedback</button>
+    <button class="mdbtn-o" id="log-skip">Alleen afvinken</button>
+    <button class="mdbtn-o" id="log-miss" style="color:var(--dng);border-color:var(--dng);margin-top:4px">⚠️ Training gemist</button>
   </div>
 </div>
 
-<div class="modal-overlay" id="log-modal">
-  <div class="modal">
-    <div class="modal-title">Training loggen <button class="modal-close" id="close-log-modal">✕</button></div>
-    <div id="modal-day-info" style="margin-bottom:10px;font-size:13px;color:var(--muted)"></div>
-    <div id="modal-detail-box" class="modal-detail" style="display:none"></div>
-    <textarea class="modal-input" id="log-input" placeholder="Hoe ging het? (bv: 5.2km, 28:30, hartslag 148)"></textarea>
-    <button class="modal-btn" id="log-submit-btn">Loggen & AI feedback</button>
-    <button class="modal-btn-out" id="log-skip-btn">Alleen afvinken</button>
-  <button class="modal-btn-out" id="log-missed-btn" style="color:var(--danger);border-color:var(--danger);margin-top:6px">⚠️ Training gemist — schema aanpassen</button>
+<div class="mo" id="det-mo">
+  <div class="md">
+    <div class="mdtitle"><span id="det-title">Detail</span><button class="mclose" onclick="closeM('det-mo')">✕</button></div>
+    <div id="det-body"></div>
   </div>
 </div>
 
-<div class="modal-overlay" id="detail-modal">
-  <div class="modal">
-    <div class="modal-title"><span id="detail-modal-title">Training detail</span><button class="modal-close" id="close-detail-modal">✕</button></div>
-    <div id="detail-modal-body"></div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="edit-modal">
-  <div class="modal">
-    <div class="modal-title">Schema aanpassen <button class="modal-close" id="close-edit-modal">✕</button></div>
-    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">Week <span id="edit-week-nr">1</span> — verander type of omschrijving</div>
+<div class="mo" id="edit-mo">
+  <div class="md">
+    <div class="mdtitle">Schema aanpassen <button class="mclose" onclick="closeM('edit-mo')">✕</button></div>
+    <div style="font-size:11px;color:var(--m);margin-bottom:10px">Week <span id="edit-wk">1</span></div>
     <div id="edit-rows"></div>
-    <button class="modal-btn" id="save-edit-btn" style="margin-top:14px">Opslaan</button>
+    <button class="mdbtn" id="edit-save" style="margin-top:12px">Opslaan</button>
   </div>
 </div>
 
-<!-- GENERATE SETTINGS MODAL -->
-<div class="modal-overlay" id="gen-modal">
-  <div class="modal">
-    <div class="modal-title">Schema genereren <button class="modal-close" onclick="document.getElementById('gen-modal').classList.remove('open')">✕</button></div>
-    <div style="display:flex;flex-direction:column;gap:14px">
-
-      <div>
-        <label class="setup-label" style="font-size:10px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;display:block;margin-bottom:7px">Doel</label>
-        <div class="setup-options" style="display:grid;grid-template-columns:1fr 1fr;gap:7px" id="gen-goal-opts">
-          <button class="opt-btn" data-g="gen-goal" data-v="5km opbouwen">5km</button>
-          <button class="opt-btn" data-g="gen-goal" data-v="10km lopen">10km</button>
-          <button class="opt-btn" data-g="gen-goal" data-v="halve marathon">Halve marathon</button>
-          <button class="opt-btn" data-g="gen-goal" data-v="marathon">Marathon</button>
-          <button class="opt-btn" data-g="gen-goal" data-v="fitter worden">Fitter worden</button>
-        </div>
+<div class="mo" id="gen-mo">
+  <div class="md">
+    <div class="mdtitle">Schema instellingen <button class="mclose" onclick="closeM('gen-mo')">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div><label class="slbl">Doel</label>
+        <select id="gen-goal" class="sinput" style="padding:9px 12px">
+          <option value="5km opbouwen">5km opbouwen</option>
+          <option value="10km lopen">10km lopen</option>
+          <option value="halve marathon">Halve marathon</option>
+          <option value="marathon">Marathon</option>
+          <option value="fitter worden">Fitter worden</option>
+        </select>
       </div>
-
-      <div>
-        <label class="setup-label" style="font-size:10px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;display:block;margin-bottom:7px">Huidige afstand</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px" id="gen-dist-opts">
-          <button class="opt-btn" data-g="gen-dist" data-v="2">~2 km</button>
-          <button class="opt-btn" data-g="gen-dist" data-v="5">~5 km</button>
-          <button class="opt-btn" data-g="gen-dist" data-v="10">~10 km</button>
-          <button class="opt-btn" data-g="gen-dist" data-v="15">~15 km</button>
-          <button class="opt-btn" data-g="gen-dist" data-v="21">~21 km</button>
-          <button class="opt-btn" data-g="gen-dist" data-v="30">30+ km</button>
-        </div>
+      <div><label class="slbl">Huidige afstand (km)</label>
+        <input type="number" id="gen-dist" class="sinput" style="padding:9px 12px">
       </div>
-
-      <div>
-        <label class="setup-label" style="font-size:10px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;display:block;margin-bottom:7px">Trainingsdagen per week</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">
-          <button class="opt-btn" data-g="gen-days" data-v="3">3×</button>
-          <button class="opt-btn" data-g="gen-days" data-v="4">4×</button>
-          <button class="opt-btn" data-g="gen-days" data-v="5">5×</button>
-        </div>
+      <div style="display:flex;gap:10px">
+        <div style="flex:1"><label class="slbl">Trainingsdagen/week</label><input type="number" id="gen-days" min="2" max="6" class="sinput" style="padding:9px 12px"></div>
+        <div style="flex:1"><label class="slbl">Aantal weken</label><input type="number" id="gen-weeks" min="4" max="24" class="sinput" style="padding:9px 12px"></div>
       </div>
-
-      <div>
-        <label class="setup-label" style="font-size:10px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;display:block;margin-bottom:7px">Aantal weken</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:7px">
-          <button class="opt-btn" data-g="gen-weeks" data-v="8">8</button>
-          <button class="opt-btn" data-g="gen-weeks" data-v="12">12</button>
-          <button class="opt-btn" data-g="gen-weeks" data-v="16">16</button>
-          <button class="opt-btn" data-g="gen-weeks" data-v="20">20</button>
-        </div>
+      <div style="display:flex;align-items:center;gap:10px">
+        <input type="checkbox" id="gen-cyc" style="width:18px;height:18px;accent-color:var(--a)">
+        <label for="gen-cyc" style="font-size:13px">Fietsen meenemen</label>
       </div>
-
-      <div>
-        <label class="setup-label" style="font-size:10px;letter-spacing:.08em;color:var(--accent);text-transform:uppercase;display:block;margin-bottom:7px">Fietsen meenemen?</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px">
-          <button class="opt-btn" data-g="gen-cyc" data-v="ja">Ja</button>
-          <button class="opt-btn" data-g="gen-cyc" data-v="nee">Nee</button>
-        </div>
-      </div>
-
-      <button class="modal-btn" id="gen-confirm-btn">Schema genereren →</button>
     </div>
+    <button class="mdbtn" id="gen-confirm" style="margin-top:16px">Schema genereren →</button>
   </div>
 </div>
 
 <script>
-let profile=null,schema=null,currentWeek=1,chatHistory=[],logTargetDay=null,logTargetDetail=null;
-let importedActivities=[],stravaToken=null,charts={};
-let WEEKS=8,DAYS=['ma','di','wo','do','vr','za','zo'];
+// ═══ STATE ═══
+let P=null, schema=null, CW=1, chat=[], logDay=null, logDet=null, acts=[], WEEKS=12;
+const DAYS=['ma','di','wo','do','vr','za','zo'];
 
+// ═══ SUPABASE ═══
+const SB_URL='https://ftklgibsqjpmqzyvqyhd.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0a2xnaWJzcWpwbXF6eXZxeWhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4OTA3OTEsImV4cCI6MjA5MzQ2Njc5MX0.bYn_5epzSpI-xZ3ndBqmID8Y_tzW4uxRaHD0EQNwVj4';
+const SB_TBL='runcoach_data';
 
-
-
-
-async function init(){
-  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
-  checkStravaCallback();
-  // Show login screen
-  await showLoginScreen();
+function uid(){
+  let id=localStorage.getItem('rc_uid');
+  if(!id){id='user_'+Math.random().toString(36).substring(2,12);localStorage.setItem('rc_uid',id);}
+  return id;
 }
 
-async function showLoginScreen(){
-  document.getElementById('login-screen').style.cssText='display:flex;flex-direction:column;min-height:100vh;padding:40px 24px;background:var(--bg)';
+async function syncUp(){
+  const id=uid();
+  const data={user_id:id,profile:JSON.parse(localStorage.getItem('rc_profile')||'null'),schema:JSON.parse(localStorage.getItem('rc_schema')||'null'),logs:JSON.parse(localStorage.getItem('rc_logs')||'{}'),feelings:JSON.parse(localStorage.getItem('rc_feelings')||'{}'),activities:JSON.parse(localStorage.getItem('rc_activities')||'[]'),chat:JSON.parse(localStorage.getItem('rc_chat')||'[]'),updated_at:new Date().toISOString()};
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/${SB_TBL}?user_id=eq.${id}`,{method:'PATCH',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Prefer':'return=minimal'},body:JSON.stringify(data)});
+    if(r.status===404||r.status===200||r.status===204)return true;
+    // If patch fails try insert
+    await fetch(`${SB_URL}/rest/v1/${SB_TBL}`,{method:'POST',headers:{'Content-Type':'application/json','apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`},body:JSON.stringify(data)});
+    return true;
+  }catch(e){return false;}
+}
+
+async function syncDown(){
+  const id=uid();
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/${SB_TBL}?user_id=eq.${id}&select=*`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+    if(!r.ok)return false;
+    const rows=await r.json();
+    if(!rows||!rows.length)return false;
+    const d=rows[0];
+    if(d.profile)localStorage.setItem('rc_profile',JSON.stringify(d.profile));
+    if(d.schema)localStorage.setItem('rc_schema',JSON.stringify(d.schema));
+    if(d.logs)localStorage.setItem('rc_logs',JSON.stringify(d.logs));
+    if(d.feelings)localStorage.setItem('rc_feelings',JSON.stringify(d.feelings));
+    if(d.activities)localStorage.setItem('rc_activities',JSON.stringify(d.activities));
+    if(d.chat)localStorage.setItem('rc_chat',JSON.stringify(d.chat));
+    return true;
+  }catch(e){return false;}
+}
+
+// Auto-sync 2s after any save
+const _orig=localStorage.setItem.bind(localStorage);
+localStorage.setItem=function(k,v){_orig(k,v);if(k.startsWith('rc_')&&k!=='rc_uid'){clearTimeout(window._st);window._st=setTimeout(syncUp,2000);}};
+
+// ═══ INIT ═══
+async function init(){
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  await showLogin();
+}
+
+async function showLogin(){
+  document.getElementById('login-screen').style.display='flex';
   document.getElementById('setup-screen').style.display='none';
   document.getElementById('app').style.display='none';
-
-  const statusEl=document.getElementById('login-status');
-  statusEl.textContent='Profielen laden...';
-
-  // Load all profiles from Supabase
+  const st=document.getElementById('login-status');
+  st.textContent='Profielen laden...';
   let profiles=[];
   try{
-    const r=await fetch(`${SB_URL}/rest/v1/${SB_TABLE}?select=user_id,profile,updated_at&order=updated_at.desc&limit=20`,{
-      headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`,'Accept':'application/json'}
-    });
-    if(r.ok){
-      const rows=await r.json();
-      if(Array.isArray(rows)){
-        profiles=rows.filter(row=>row.profile&&row.profile.name);
-      }
-    } else {
-      console.warn('Profielen laden status:', r.status, await r.text());
-    }
-    statusEl.textContent='';
-  }catch(e){
-    console.warn('Profielen laden fout:', e.message);
-    statusEl.textContent='';
-  }
-
-  const list=document.getElementById('profiles-list');
-  if(profiles.length===0){
-    list.innerHTML=`<div style="font-size:13px;color:var(--muted);text-align:center;padding:20px 0">Nog geen profielen gevonden.<br>Maak hieronder een nieuw profiel aan.</div>`;
+    const r=await fetch(`${SB_URL}/rest/v1/${SB_TBL}?select=user_id,profile,updated_at&order=updated_at.desc&limit=20`,{headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}});
+    if(r.ok){const rows=await r.json();if(Array.isArray(rows))profiles=rows.filter(x=>x.profile&&x.profile.name);}
+  }catch(e){}
+  st.textContent='';
+  const list=document.getElementById('login-list');
+  if(!profiles.length){
+    list.innerHTML='<div style="font-size:13px;color:var(--m);text-align:center;padding:20px 0">Nog geen profielen. Maak hieronder een nieuw aan.</div>';
   } else {
     list.innerHTML=profiles.map(row=>{
       const p=row.profile;
-      const date=new Date(row.updated_at).toLocaleDateString('nl-NL');
-      return `<div onclick="loadProfile('${row.user_id}')" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:border-color .15s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
-        <div style="width:40px;height:40px;border-radius:50%;background:rgba(200,240,96,.15);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏃</div>
-        <div style="flex:1">
-          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:2px">${p.name}</div>
-          <div style="font-size:11px;color:var(--muted)">${p.goal||''} · ${p.runLevel||''} · laatst actief ${date}</div>
-        </div>
-        <div style="color:var(--accent);font-size:18px">›</div>
+      const dt=new Date(row.updated_at).toLocaleDateString('nl-NL');
+      return `<div onclick="loadProfile('${row.user_id}')" style="background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:14px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:12px">
+        <div style="width:40px;height:40px;border-radius:50%;background:rgba(200,240,96,.15);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">🏃</div>
+        <div style="flex:1"><div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:2px">${p.name}</div>
+        <div style="font-size:11px;color:var(--m)">${p.goal||''} · ${p.runLevel||''} · ${dt}</div></div>
+        <div style="color:var(--a);font-size:20px">›</div>
       </div>`;
     }).join('');
   }
 }
 
 async function loadProfile(userId){
-  const statusEl=document.getElementById('login-status');
-  statusEl.textContent='Profiel laden...';
-  localStorage.setItem('rc_userid',userId);
-  const ok=await syncFromCloud();
-  if(!ok){statusEl.textContent='Kon profiel niet laden';return;}
-  const s=localStorage.getItem('rc_profile');
-  if(!s){statusEl.textContent='Geen profieldata gevonden';return;}
-  profile=JSON.parse(s);
-  WEEKS=profile.weeks||12;
-  W=profile.weeks||12;
-  schema=JSON.parse(localStorage.getItem('rc_schema')||'null');
-  chatHistory=JSON.parse(localStorage.getItem('rc_chat')||'[]');
-  importedActivities=JSON.parse(localStorage.getItem('rc_activities')||'[]');
-  document.getElementById('login-screen').style.display='none';
-  document.getElementById('app').style.display='block';
-  updateTopbar();renderProfile();renderToday();renderSchema();renderActivitiesList();updateStreakBadge();
+  const st=document.getElementById('login-status');
+  st.textContent='Laden...';
+  localStorage.setItem('rc_uid',userId);
+  const ok=await syncDown();
+  if(!ok){st.textContent='Kon profiel niet laden';return;}
+  startApp();
 }
 
 function startApp(){
-  profile=JSON.parse(localStorage.getItem('rc_profile')||'null');
-  if(!profile)return;
-  WEEKS=profile.weeks||12;
-  W=profile.weeks||12;
+  const s=localStorage.getItem('rc_profile');
+  if(!s)return;
+  P=JSON.parse(s);
+  WEEKS=P.weeks||12;
   schema=JSON.parse(localStorage.getItem('rc_schema')||'null');
-  chatHistory=JSON.parse(localStorage.getItem('rc_chat')||'[]');
-  importedActivities=JSON.parse(localStorage.getItem('rc_activities')||'[]');
+  chat=JSON.parse(localStorage.getItem('rc_chat')||'[]');
+  acts=JSON.parse(localStorage.getItem('rc_activities')||'[]');
   document.getElementById('login-screen').style.display='none';
   document.getElementById('setup-screen').style.display='none';
-  document.getElementById('app').style.display='block';
-  updateTopbar();renderProfile();renderToday();renderSchema();renderActivitiesList();updateStreakBadge();
+  document.getElementById('app').style.display='flex';
+  updateTopbar();renderProf();renderToday();renderSchema();renderActs();renderChat();updateStrk();
 }
 
-function updateTopbar(){
-  const n=new Date(),dn=['zo','ma','di','wo','do','vr','za'],mn=['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
-  document.getElementById('topbar-date').textContent=`${dn[n.getDay()]} ${n.getDate()} ${mn[n.getMonth()]}`;
-}
-
-document.querySelectorAll('.opt-btn').forEach(b=>b.addEventListener('click',()=>{
-  document.querySelectorAll(`[data-group="${b.dataset.group}"]`).forEach(x=>x.classList.remove('active'));
+// ═══ SETUP ═══
+document.querySelectorAll('.ob').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll(`[data-g="${b.dataset.g}"]`).forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
 }));
 
 document.getElementById('new-profile-btn').addEventListener('click',()=>{
   document.getElementById('login-screen').style.display='none';
-  const ss = document.getElementById('setup-screen');
-  ss.style.cssText = 'display:block;min-height:100vh;overflow-y:auto;padding:40px 24px;background:var(--bg)';
+  document.getElementById('setup-screen').style.display='flex';
 });
 
-document.getElementById('start-btn').addEventListener('click',async()=>{
-  const k=document.getElementById('setup-api').value.trim();
-  if(!k){alert('Voer je API key in');return;}
+document.getElementById('s-go').addEventListener('click',async()=>{
+  const k=document.getElementById('s-api').value.trim();
+  if(!k){alert('Voer je Anthropic API key in');return;}
+  const age=parseInt(document.getElementById('s-age').value)||30;
+  const mhr=parseInt(document.getElementById('s-mhr').value)||(220-age);
   // New profile = new user ID
   const newId='user_'+Math.random().toString(36).substring(2,12);
-  localStorage.setItem('rc_userid',newId);
-  const _age=parseInt(document.getElementById('setup-age')?.value)||30;
-  const _mhr=parseInt(document.getElementById('setup-mhr')?.value)||(220-_age);
-  profile={apiKey:k,name:document.getElementById('setup-name').value.trim()||'Atleet',runLevel:document.querySelector('[data-group="run-level"].active')?.dataset.val||'beginner',currentDist:parseInt(document.querySelector('[data-group="current-dist"].active')?.dataset.val||'5'),goal:document.querySelector('[data-group="goal"].active')?.dataset.val||'5km opbouwen',cycling:document.querySelector('[data-group="cycling"].active')?.dataset.val||'ja',days:parseInt(document.querySelector('[data-group="days"].active')?.dataset.val||'4'),weeks:parseInt(document.querySelector('[data-group="weeks"].active')?.dataset.val||'12'),weight:document.getElementById('setup-weight').value||'75',height:document.getElementById('setup-height').value||'175',age:_age,mhr:_mhr,startDate:new Date().toISOString()};
-  localStorage.setItem('rc_profile',JSON.stringify(profile));
-  W=profile.weeks||12;
-  await syncToCloud();
+  _orig('rc_uid',newId);
+  P={apiKey:k,name:document.getElementById('s-name').value.trim()||'Atleet',runLevel:gv('lvl'),goal:gv('goal'),currentDist:parseInt(gv('dist')||10),cycling:gv('cyc'),days:parseInt(gv('days')||4),weeks:parseInt(gv('weeks')||12),age,mhr,weight:document.getElementById('s-wt').value||'75',height:document.getElementById('s-ht').value||'175',startDate:new Date().toISOString()};
+  WEEKS=P.weeks;
+  localStorage.setItem('rc_profile',JSON.stringify(P));
+  await syncUp();
   document.getElementById('setup-screen').style.display='none';
-  document.getElementById('app').style.display='block';
-  updateTopbar();renderProfile();renderToday();
+  document.getElementById('app').style.display='flex';
+  updateTopbar();renderProf();renderToday();
   autoGreet();
 });
 
-document.getElementById('meer-nav-btn')?.addEventListener('click',()=>{
-  const menu=document.getElementById('meer-menu');
-  menu.style.display=menu.style.display==='none'?'block':'none';
-});
-document.addEventListener('click',e=>{
-  const menu=document.getElementById('meer-menu');
-  if(menu&&menu.style.display!=='none'&&!menu.contains(e.target)&&!document.getElementById('meer-nav-btn')?.contains(e.target)){
-    menu.style.display='none';
-  }
-});
+function gv(g){return document.querySelector(`[data-g="${g}"].active`)?.dataset.v||'';}
 
-document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>{
-  if(!b.dataset.page)return;
-  document.getElementById('meer-menu').style.display='none';
-  document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+// ═══ NAV ═══
+document.querySelectorAll('.ni').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('.ni').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
-  document.getElementById('page-'+b.dataset.page).classList.add('active');
-  if(b.dataset.page==='stats')setTimeout(renderCharts,80);
-  if(b.dataset.page==='today')renderToday();
-  if(b.dataset.page==='profile'){
-    const el=document.getElementById('show-userid');
-    if(el)el.textContent=getUserId();
-    renderHRZones();
-    const ea=document.getElementById('edit-age');
-    const em=document.getElementById('edit-mhr');
-    if(ea)ea.value=profile?.age||'';
-    if(em)em.value=profile?.mhr||'';
-  }
-  if(b.dataset.page==='profile'){
-    const ep=document.getElementById('edit-proxy');
-    if(ep&&profile?.proxyUrl)ep.placeholder=profile.proxyUrl;
-  }
+  document.getElementById('p-'+b.dataset.p).classList.add('active');
+  if(b.dataset.p==='today')renderToday();
+  if(b.dataset.p==='profile'){renderHR();document.getElementById('edit-age').value=P?.age||'';document.getElementById('edit-mhr').value=P?.mhr||'';}
 }));
 
-function switchTo(page){
-  document.getElementById('meer-menu').style.display='none';
-  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
-  document.getElementById('page-'+page)?.classList.add('active');
+function goTo(p){
+  document.querySelectorAll('.ni').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
+  document.querySelector(`[data-p="${p}"]`)?.classList.add('active');
+  document.getElementById('p-'+p)?.classList.add('active');
 }
 
-function goMeer(page){
-  document.getElementById('meer-menu').style.display='none';
-  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('meer-nav-btn')?.classList.add('active');
-  document.getElementById('page-'+page)?.classList.add('active');
+// ═══ TOPBAR ═══
+function updateTopbar(){
+  const n=new Date(),dn=['zo','ma','di','wo','do','vr','za'],mn=['jan','feb','mrt','apr','mei','jun','jul','aug','sep','okt','nov','dec'];
+  document.getElementById('tdate').textContent=`${dn[n.getDay()]} ${n.getDate()} ${mn[n.getMonth()]}`;
 }
 
-function getTodayCode(){const i=new Date().getDay();return DAYS[i===0?6:i-1];}
+function updateStrk(){
+  const s=calcStrk();
+  const el=document.getElementById('strkb');
+  if(s>0){el.textContent=`🔥 ${s}`;el.style.display='inline-flex';}
+  else el.style.display='none';
+}
+
+function calcStrk(){
+  const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
+  let s=0;
+  for(let w=CW;w>=1;w--){
+    const wl=logs[`w${w}`]||{};
+    const wk=schema?.[w-1];if(!wk)break;
+    const d=wk.dagen.filter(x=>x.type!=='rest'&&wl[x.dag]).length;
+    if(d>0)s+=d;else if(w<CW)break;
+  }
+  return s;
+}
+
+// ═══ TODAY ═══
+function tdc(){const i=new Date().getDay();return DAYS[i===0?6:i-1];}
 
 function renderToday(){
   if(!schema){
-    document.getElementById('today-hero-wrap').innerHTML=`<div class="today-hero"><div class="today-label">Welkom, ${profile?.name||'Atleet'}</div><div class="today-workout">Nog geen schema</div><div class="today-detail">Ga naar Schema en genereer je trainingsplan.</div><div class="today-actions"><button class="today-btn today-btn-primary" onclick="switchTo('schema')">Schema genereren →</button></div></div>`;
+    document.getElementById('hero-wrap').innerHTML=`<div class="hero"><div class="hlbl">Welkom</div><div class="htitle">Nog geen schema</div><div class="hdet">Ga naar Schema en genereer je trainingsplan.</div><div class="hbtns"><button class="hbtn hbtn-p" onclick="goTo('schema')">Schema genereren →</button></div></div>`;
+    document.getElementById('s-km').textContent='—';
+    document.getElementById('s-done').textContent='0/0';
+    document.getElementById('day-list').innerHTML='';
     return;
   }
-  const wk=schema[currentWeek-1];
-  const tc=getTodayCode();
-  if(document.getElementById('week-nr-today'))document.getElementById('week-nr-today').textContent=currentWeek;
-  const todayDay=wk?.dagen?.find(d=>d.dag===tc);
+  const wk=schema[CW-1];
+  const tc=tdc();
+  document.getElementById('wk-nr').textContent=CW;
+  const d=wk?.dagen?.find(x=>x.dag===tc);
   const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
-  const wl=logs[`w${currentWeek}`]||{};
-  const done=todayDay&&!!wl[todayDay.dag];
-  const isRest=todayDay?.type==='rest';
-  let heroHTML='';
-  if(!todayDay)heroHTML=`<div class="today-hero"><div class="today-label">Vandaag</div><div class="today-workout">Geen training gepland</div><div class="today-detail">Rust of vrije keuze dag.</div></div>`;
-  else if(isRest)heroHTML=`<div class="today-hero"><div class="today-label">Vandaag · Rustdag 💤</div><div class="today-workout">Herstel & rust</div><div class="today-detail">Actief herstel: stretch, wandel licht, foam roll.</div></div>`;
-  else if(done)heroHTML=`<div class="today-hero" style="background:linear-gradient(135deg,rgba(91,227,160,.1) 0%,rgba(200,240,96,.04) 100%);border-color:rgba(91,227,160,.3)"><div class="today-label" style="color:var(--accent2)">Vandaag · Voltooid ✓</div><div class="today-workout">${todayDay.beschrijving}</div><div class="today-detail">${wl[todayDay.dag]?.notes||'Goed gedaan!'}</div><div class="today-actions"><button class="today-btn today-btn-secondary" onclick="switchTo('coach')">Coach vragen 💬</button></div></div>`;
-  else{const icon=todayDay.type==='bike'?'🚴':todayDay.type==='cross'?'🏋️':'🏃';heroHTML=`<div class="today-hero"><div class="today-label">Vandaag · ${todayDay.dag.toUpperCase()} ${icon}</div><div class="today-workout">${todayDay.beschrijving}</div><div class="today-detail">${(todayDay.detail||'').substring(0,130)}${(todayDay.detail||'').length>130?'…':''}</div><div class="today-actions"><button class="today-btn today-btn-primary" onclick="openLogModal('${todayDay.dag}','${(todayDay.beschrijving||'').replace(/'/g,"\\'")}','${(todayDay.detail||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')">Training loggen</button><button class="today-btn today-btn-secondary" onclick="openDetailModal('${todayDay.dag}')">Details →</button></div></div>`;}
-  document.getElementById('today-hero-wrap').innerHTML=heroHTML;
+  const wl=logs[`w${CW}`]||{};
+  const done=d&&!!wl[d.dag];
+  const isRest=d?.type==='rest';
 
-  const trainDays=wk?.dagen?.filter(d=>d.type!=='rest')||[];
-  const doneCount=trainDays.filter(d=>wl[d.dag]).length;
-  const streak=calcStreak();
-  document.getElementById('stat-km').textContent=wk?.km_totaal||'—';
-  document.getElementById('stat-done').textContent=`${doneCount}/${trainDays.length}`;
-  if(document.getElementById('stat-streak'))document.getElementById('stat-streak').textContent=streak;
-  if(document.getElementById('week-prog'))document.getElementById('week-prog').style.width=(doneCount/Math.max(trainDays.length,1)*100)+'%';
+  // Hero
+  let h='';
+  if(!d){
+    h=`<div class="hero"><div class="hlbl">Vandaag</div><div class="htitle">Geen training</div><div class="hdet">Rustdag of vrije keuze.</div></div>`;
+  } else if(isRest){
+    h=`<div class="hero"><div class="hlbl">Vandaag · Rustdag 💤</div><div class="htitle">Herstel & rust</div><div class="hdet">Stretch, wandel licht, foam roll.</div></div>`;
+  } else if(done){
+    h=`<div class="hero" style="background:linear-gradient(135deg,rgba(91,227,160,.1),rgba(200,240,96,.04));border-color:rgba(91,227,160,.3)"><div class="hlbl" style="color:var(--a2)">Vandaag · Voltooid ✓</div><div class="htitle">${d.beschrijving}</div><div class="hdet">${wl[d.dag]?.notes||'Goed gedaan!'}</div><div class="hbtns"><button class="hbtn hbtn-s" onclick="goTo('coach')">Coach vragen 💬</button></div></div>`;
+  } else {
+    const ic=d.type==='bike'?'🚴':'🏃';
+    const det=(d.detail||'').substring(0,110)+((d.detail||'').length>110?'…':'');
+    h=`<div class="hero"><div class="hlbl">Vandaag · ${d.dag.toUpperCase()} ${ic}</div><div class="htitle">${d.beschrijving}</div><div class="hdet">${det}</div><div class="hbtns"><button class="hbtn hbtn-p" onclick="openLog('${d.dag}','${esc(d.beschrijving)}','${esc(d.detail||'')}')">Training loggen</button><button class="hbtn hbtn-s" onclick="openDet('${d.dag}')">Details →</button></div></div>`;
+  }
+  document.getElementById('hero-wrap').innerHTML=h;
 
-  const feelings=JSON.parse(localStorage.getItem('rc_feelings')||'{}');
-  const feel=feelings[new Date().toDateString()];
-  document.querySelectorAll('.rec-btn').forEach(b=>b.className='rec-btn');
-  if(feel)document.querySelector(`[data-feel="${feel}"]`)?.classList.add(`active-${feel}`);
+  // Stats
+  const td=wk?.dagen?.filter(x=>x.type!=='rest')||[];
+  const dc=td.filter(x=>wl[x.dag]&&!wl[x.dag].missed).length;
+  document.getElementById('s-km').textContent=wk?.km_totaal||'—';
+  document.getElementById('s-done').textContent=`${dc}/${td.length}`;
 
+  // Feeling
+  const feels=JSON.parse(localStorage.getItem('rc_feelings')||'{}');
+  const cf=feels[new Date().toDateString()];
+  document.querySelectorAll('.fb').forEach(b=>b.className='fb');
+  if(cf){const m={great:'ag',ok:'ao',tired:'at',bad:'ab'};document.querySelector(`[data-f="${cf}"]`)?.classList.add(m[cf]);}
+
+  // Day list
   if(wk?.dagen){
-    document.getElementById('today-week-list').innerHTML=wk.dagen.map(d=>{
-      const isDone=!!wl[d.dag];
+    document.getElementById('day-list').innerHTML=wk.dagen.map(d=>{
+      const isDone=!!wl[d.dag]&&!wl[d.dag].missed;
+      const isMissed=!!wl[d.dag]?.missed;
       const isToday=d.dag===tc;
-      const dotCls=isDone?'dot-done':`dot-${d.type}`;
+      const dotCls=isDone?'dot-done':isMissed?'dot-dng':`dot-${d.type}`;
       const tagCls=isDone?'tag-done':`tag-${d.type}`;
-      const rowStyle=isToday?'background:rgba(200,240,96,.04);margin:0 -14px;padding:10px 14px':(d.type==='rest'?'opacity:.4':'');
-      return `<div class="day-row" style="${rowStyle}">
-        <div class="day-dot ${dotCls}"></div>
-        <div class="day-info">
-          <div class="day-name">${d.dag}${isToday?' <span style="font-size:10px;color:var(--accent3)">\u2190 vandaag</span>':''} <span class="tag ${tagCls}">${isDone?'\u2713':d.type}</span></div>
-          <div class="day-desc">${d.beschrijving}</div>
+      const tagTxt=isDone?'✓':isMissed?'✕':d.type;
+      const isRest=d.type==='rest';
+      const style=isToday?'background:rgba(200,240,96,.04);margin:0 -13px;padding:9px 13px':isRest?'opacity:.45':'';
+      return `<div class="dr" style="${style}">
+        <div class="dot ${dotCls}"></div>
+        <div class="di">
+          <div class="dn">${d.dag}${isToday?' <span style="font-size:9px;color:var(--a3)">← vandaag</span>':''} <span class="tag ${tagCls}">${tagTxt}</span></div>
+          <div class="dd">${d.beschrijving}</div>
         </div>
-        ${d.type!=='rest'&&!isDone?`<div class="day-actions">
-          <button class="day-btn" onclick="openLogModal('${d.dag}','${(d.beschrijving||'').replace(/'/g,"\\'")}','${(d.detail||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')">Log</button>
-          <button class="day-btn done-btn" onclick="markDone('${d.dag}');renderToday()">\u2713</button>
-          <button class="day-btn" style="border-color:var(--danger);color:var(--danger)" onclick="markMissed('${d.dag}');renderToday()">\u2715</button>
+        ${!isRest&&!isDone&&!isMissed?`<div class="das">
+          <button class="db" onclick="openLog('${d.dag}','${esc(d.beschrijving)}','${esc(d.detail||'')}')">Log</button>
+          <button class="db dbd" onclick="markDone('${d.dag}');renderToday()">✓</button>
+          <button class="db" style="border-color:var(--dng);color:var(--dng)" onclick="markMissed('${d.dag}')">✕</button>
         </div>`:''}
       </div>`;
     }).join('');
   }
 }
 
-function calcStreak(){
-  const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
-  let s=0;
-  for(let w=currentWeek;w>=1;w--){
-    const wl=logs[`w${w}`]||{};
-    const wk=schema?.[w-1];if(!wk)break;
-    const done=wk.dagen.filter(d=>d.type!=='rest'&&wl[d.dag]).length;
-    if(done>0)s+=done;else if(w<currentWeek)break;
-  }
-  return s;
+function esc(s){return(s||'').replace(/'/g,"\\'").replace(/\n/g,' ').substring(0,150);}
+
+function logFeel(f,btn){
+  document.querySelectorAll('.fb').forEach(b=>b.className='fb');
+  const m={great:'ag',ok:'ao',tired:'at',bad:'ab'};btn.classList.add(m[f]);
+  const fe=JSON.parse(localStorage.getItem('rc_feelings')||'{}');
+  fe[new Date().toDateString()]=f;
+  localStorage.setItem('rc_feelings',JSON.stringify(fe));
+  const msgs={great:'Ik voel me vandaag top!',ok:'Ik voel me goed vandaag.',tired:'Ik ben behoorlijk moe vandaag, wat adviseer je?',bad:'Ik voel me niet goed. Rust nemen?'};
+  goTo('coach');addB('user',msgs[f]);askCoach(msgs[f]);
 }
 
-function updateStreakBadge(){
-  const s=calcStreak();
-  const el=document.getElementById('streak-badge');
-  if(s>0){el.textContent=`🔥 ${s}`;el.style.display='inline-flex';}else el.style.display='none';
-}
+// ═══ SCHEMA ═══
+document.getElementById('gen-btn').addEventListener('click',()=>{
+  if(!P?.apiKey){alert('Geen API key.\nGa naar Profiel → API Key instellen.');return;}
+  document.getElementById('gen-goal').value=P.goal||'marathon';
+  document.getElementById('gen-days').value=P.days||4;
+  document.getElementById('gen-weeks').value=P.weeks||12;
+  document.getElementById('gen-dist').value=P.currentDist||10;
+  document.getElementById('gen-cyc').checked=P.cycling==='ja';
+  document.getElementById('gen-mo').classList.add('open');
+});
 
-function logFeeling(feel,btn){
-  document.querySelectorAll('.rec-btn').forEach(b=>b.className='rec-btn');
-  btn.classList.add(`active-${feel}`);
-  const f=JSON.parse(localStorage.getItem('rc_feelings')||'{}');
-  f[new Date().toDateString()]=feel;
-  localStorage.setItem('rc_feelings',JSON.stringify(f));
-  const msgs={great:'Ik voel me vandaag top en energiek!',ok:'Ik voel me vandaag goed.',tired:'Ik ben vandaag best moe, wat adviseer je?',bad:'Ik voel me niet goed vandaag. Rust nemen?'};
-  switchTo('coach');addBubble('user',msgs[feel]);askCoach(msgs[feel]);
-}
-
-document.getElementById('generate-schema-btn').addEventListener('click',()=>{
-  document.getElementById('gen-goal').value=profile.goal||'marathon';
-  document.getElementById('gen-days').value=profile.days||4;
-  document.getElementById('gen-weeks').value=profile.weeks||12;
-  document.getElementById('gen-dist').value=profile.currentDist||10;
-  document.getElementById('gen-cycling').checked=profile.cycling==='ja';
-  document.getElementById('gen-modal').classList.add('open');
-},{capture:true});
-document.getElementById('gen-confirm-btn')?.addEventListener('click',()=>{
-  profile.goal=document.getElementById('gen-goal').value||profile.goal;
-  profile.days=parseInt(document.getElementById('gen-days').value)||profile.days;
-  profile.weeks=parseInt(document.getElementById('gen-weeks').value)||profile.weeks;
-  profile.currentDist=parseInt(document.getElementById('gen-dist').value)||profile.currentDist;
-  profile.cycling=document.getElementById('gen-cycling').checked?'ja':'nee';
-  W=profile.weeks;
-  localStorage.setItem('rc_profile',JSON.stringify(profile));
-  document.getElementById('gen-modal').classList.remove('open');
+document.getElementById('gen-confirm').addEventListener('click',()=>{
+  P.goal=document.getElementById('gen-goal').value||P.goal;
+  P.days=parseInt(document.getElementById('gen-days').value)||P.days;
+  P.weeks=parseInt(document.getElementById('gen-weeks').value)||P.weeks;
+  P.currentDist=parseInt(document.getElementById('gen-dist').value)||P.currentDist;
+  P.cycling=document.getElementById('gen-cyc').checked?'ja':'nee';
+  WEEKS=P.weeks;
+  localStorage.setItem('rc_profile',JSON.stringify(P));
+  closeM('gen-mo');
   generateSchema();
 });
-document.getElementById('delete-schema-btn')?.addEventListener('click',()=>{
-  if(!schema){alert('Geen schema om te verwijderen.');return;}
-  if(!confirm('Schema verwijderen? Je trainingslog blijft bewaard.'))return;
-  schema=null;
-  localStorage.removeItem('rc_schema');
-  syncToCloud();
-  document.getElementById('schema-list').innerHTML='<div style="text-align:center;padding:24px;color:var(--muted);font-size:13px">Druk op Genereer voor je persoonlijk schema</div>';
-  document.getElementById('streak-card').style.display='none';
-  renderToday();
-});
-document.getElementById('generate-schema-btn').addEventListener('click',openGenerateModal);
-function buildDetail(d) {
-  if (d.instructie) return d.instructie;
-  if (d.wu || d.hw || d.cd) {
-    const parts = [];
-    if (d.wu) parts.push('Warming up: ' + d.wu);
-    if (d.hw) parts.push('Hoofdwerk: ' + d.hw);
-    if (d.cd) parts.push('Cooling down: ' + d.cd);
-    return parts.join(' | ');
-  }
-  return d.detail || '';
-}
 
 async function generateSchema(){
-  const btn=document.getElementById('generate-schema-btn');
-  if(!profile?.apiKey){alert('Geen API key.\nGa naar Profiel → API Key instellen.');return;}
+  const btn=document.getElementById('gen-btn');
   btn.textContent='...';btn.disabled=true;
+  const mhr=P.mhr||180;
+  const cd=P.currentDist||10;
+  const tw=P.weeks||12;
+  const sys='Je bent loopcoach. Geef uitsluitend valide JSON terug voor 1 week. Geen markdown, geen uitleg. In tekstwaarden: geen apostrofs, geen aanhalingstekens. Schrijf min/km als min-km.';
+  schema=[];
+  let kmBase=cd*1.2;
+  for(let w=1;w<=tw;w++){
+    btn.textContent=`Week ${w}/${tw}...`;
+    const isRec=w%4===0;
+    const km=Math.round(isRec?kmBase*.7:kmBase);
+    if(!isRec)kmBase*=1.08;
+    const prompt=`Week ${w} van ${tw}. Doel: ${P.goal}. Huidige conditie: ${cd}km. Max hartslag: ${mhr} spm. Zone2: ${Math.round(mhr*.6)}-${Math.round(mhr*.7)} spm. Zone3: ${Math.round(mhr*.7)}-${Math.round(mhr*.8)} spm.${isRec?' Herstelweek: lichter volume.':''} Totaal ca ${km}km. ${P.cycling==='ja'?'1 fietssessie.':''} Precies ${P.days} trainingsdagen, rest rustdagen.
 
-  const mhr=profile.mhr||180;
-  const currentDist=profile.currentDist||10;
-  const totalWeeks=profile.weeks||12;
-  const weekOneMax=Math.round(currentDist*1.1);
+JSON voor 1 week:
+{"week":${w},"focus":"beschrijving","km":${km},"dagen":[{"dag":"ma","type":"run","omschrijving":"Duurloop 5km","wu":"5 min wandelen","hw":"5km zone2 tempo 6-30 min-km hartslag ${Math.round(mhr*.65)} spm","cd":"5 min wandelen stretchen"},{"dag":"di","type":"rest","omschrijving":"Rust","wu":"","hw":"Rust of wandelen","cd":""}]}
 
-  const sys="Je bent loopcoach. Geef uitsluitend valide JSON terug voor 1 week. Geen markdown, geen uitleg. In alle tekstwaarden: gebruik NOOIT apostrofs of aanhalingstekens. Schrijf min/km als min-km.";
-
-  schema = [];
-  let kmBase = currentDist * 1.2;
-
-  for(let w = 1; w <= totalWeeks; w++){
-    btn.textContent=`Week ${w}/${totalWeeks}...`;
-    const kmWeek = Math.round(kmBase);
-    const isRecovery = w % 4 === 0;
-    const kmActual = isRecovery ? Math.round(kmWeek * 0.7) : kmWeek;
-    if(!isRecovery) kmBase *= 1.08;
-
-    const prompt=`Week ${w} van ${totalWeeks}. Doel: ${profile.goal}. Huidige conditie: ${currentDist}km. Max hartslag: ${mhr} spm. Zone2: ${Math.round(mhr*.6)}-${Math.round(mhr*.7)} spm. Zone3: ${Math.round(mhr*.7)}-${Math.round(mhr*.8)} spm. Zone4: ${Math.round(mhr*.8)}-${Math.round(mhr*.9)} spm. ${isRecovery?'Herstelweek: lichter volume.':''} Totaal ca ${kmActual}km hardlopen. ${profile.cycling==='ja'?'1 fietssessie als herstel.':''} Precies ${profile.days} trainingsdagen, rest rustdagen.
-
-Geef JSON voor precies 1 week met 7 dagen:
-{"week":${w},"focus":"korte weekbeschrijving","km":${kmActual},"dagen":[{"dag":"ma","type":"run","omschrijving":"Duurloop 5km","wu":"5 min wandelen","hw":"5km zone2 tempo 6-30 min-km hartslag ${Math.round(mhr*.65)} spm","cd":"5 min wandelen stretchen"},{"dag":"di","type":"rest","omschrijving":"Rust","wu":"","hw":"Rust of wandelen","cd":""}]}
-
-Regels: type alleen run bike rest. Omschrijving max 35 tekens. Geen apostrofs. Geen aanhalingstekens in tekst. Alle 7 dagen invullen.`;
-
+Regels: type=run/bike/rest. omschrijving max 35 tekens. wu=warming up. hw=hoofdwerk met tempo en hartslag. cd=cooling down. Geen apostrofs. Alle 7 dagen.`;
     try{
-      const res = await callClaude([{role:'user',content:prompt}], 800, sys);
-      const s = res.indexOf('{');
-      const e = res.lastIndexOf('}');
-      if(s===-1||e===-1) throw new Error('Geen JSON');
-      let js = res.substring(s, e+1);
-      // Aggressive cleaning
-      js = js
+      const res=await callAI([{role:'user',content:prompt}],700,sys);
+      const si=res.indexOf('{'),ei=res.lastIndexOf('}');
+      if(si===-1||ei===-1)throw new Error('geen JSON');
+      let js=res.substring(si,ei+1)
         .replace(/,(\s*[}\]])/g,'$1')
-        .replace(/[\u2018\u2019\u2032\u0060]/g,'')
+        .replace(/[\u2018\u2019\u2032]/g,'')
         .replace(/[\u201c\u201d]/g,'"')
         .replace(/\t/g,' ')
-        .replace(/\r/g,'');
-      // Remove apostrophes inside words
-      js = js.replace(/([a-zA-Z])'([a-zA-Z])/g,'$1$2');
-      const wkData = JSON.parse(js);
-      const normalized = {
-        week: w,
-        focus: String(wkData.focus||`Week ${w}`).replace(/['"]/g,''),
-        km_totaal: Number(wkData.km||wkData.km_totaal||kmActual),
-        dagen: (wkData.dagen||[]).map(d=>({
-          dag: String(d.dag||'?').substring(0,2),
-          type: ['run','bike','rest'].includes(d.type)?d.type:'rest',
-          beschrijving: String(d.omschrijving||d.beschrijving||d.type||'').replace(/['"]/g,'').substring(0,50),
-          detail: buildDetail(d)
-        }))
-      };
-      schema.push(normalized);
+        .replace(/([a-zA-Z])'([a-zA-Z])/g,'$1$2');
+      const raw=JSON.parse(js);
+      schema.push({week:w,focus:String(raw.focus||`Week ${w}`).replace(/['"]/g,'').substring(0,60),km_totaal:Number(raw.km||raw.km_totaal||km),dagen:(raw.dagen||[]).map(d=>({dag:String(d.dag||'?').substring(0,2),type:['run','bike','rest'].includes(d.type)?d.type:'rest',beschrijving:String(d.omschrijving||d.beschrijving||d.type||'').replace(/['"]/g,'').substring(0,50),detail:buildDet(d)}))});
     }catch(e){
-      console.error(`Week ${w} fout:`,e.message);
-      // Push placeholder so schema stays aligned
-      schema.push({week:w,focus:`Week ${w}`,km_totaal:kmActual,dagen:DAYS.map(dag=>({dag,type:'rest',beschrijving:'Rust',detail:''}))});
+      schema.push({week:w,focus:`Week ${w}`,km_totaal:km,dagen:DAYS.map(dag=>({dag,type:'rest',beschrijving:'Rust',detail:''}))});
     }
   }
-
   localStorage.setItem('rc_schema',JSON.stringify(schema));
-  W=totalWeeks;
-  WEEKS=totalWeeks;
-  renderSchema();
-  renderToday();
+  renderSchema();renderToday();
   btn.textContent='⟳ Genereer';btn.disabled=false;
 }
 
-
-function renderSchema(){
-  document.getElementById('week-label').textContent=`Week ${currentWeek} van ${WEEKS}`;
-  if(!schema)return;
-  const wk=schema[currentWeek-1];if(!wk)return;
-  const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
-  const wl=logs[`w${currentWeek}`]||{};
-  const trainDays=wk.dagen.filter(d=>d.type!=='rest');
-  const doneCount=trainDays.filter(d=>wl[d.dag]).length;
-  const pct=Math.round(doneCount/Math.max(trainDays.length,1)*100);
-  document.getElementById('schema-list').innerHTML=
-    `<div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-style:italic;line-height:1.5">${wk.focus||''}</div>`+
-    wk.dagen.map(d=>{
-      const done=!!wl[d.dag];
-      const missed=!!(JSON.parse(localStorage.getItem('rc_l')||'{}')[`w${wk}`]||{})[d.dag]?.missed;
-const tc=done?'dot-done':missed?'dot-dng':`dot-${d.type}`;
-      const tg=done?'tag-done':`tag-${d.type}`;
-      return `<div class="day-row">
-        <div class="day-dot ${tc}"></div>
-        <div class="day-info">
-          <div class="day-name">${d.dag} <span class="tag ${tg}">${done?'✓ gedaan':d.type}</span></div>
-          <div class="day-desc">${d.beschrijving}</div>
-        </div>
-        ${d.type!=='rest'?(!done?`<div class="day-actions">
-          <button class="day-btn" onclick="openDetailModal('${d.dag}')">ℹ</button>
-          <button class="day-btn" onclick="openLogModal('${d.dag}','${(d.beschrijving||'').replace(/'/g,"\\'")}','${(d.detail||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')">Log</button>
-          <button class="day-btn done-btn" onclick="markDone('${d.dag}');renderSchema()">✓</button>
-          <button class="day-btn" style="border-color:var(--danger);color:var(--danger)" onclick="markMissed('${d.dag}')">✕</button>
-        </div>`:`<div class="day-actions"><button class="day-btn" style="color:var(--muted);font-size:10px" onclick="undoDone('${d.dag}')">↩</button></div>`):''}
-      </div>`;
-    }).join('');
-  document.getElementById('streak-card').style.display='block';
-  document.getElementById('streak-pct').textContent=pct+'%';
-  renderStreakDots();
+function buildDet(d){
+  if(d.instructie)return d.instructie;
+  if(d.wu||d.hw||d.cd){
+    const p=[];
+    if(d.wu)p.push('Warming up: '+d.wu);
+    if(d.hw)p.push('Hoofdwerk: '+d.hw);
+    if(d.cd)p.push('Cooling down: '+d.cd);
+    return p.join(' | ');
+  }
+  return d.detail||'';
 }
 
-function renderStreakDots(){
+function renderSchema(){
+  document.getElementById('wlbl').textContent=`Week ${CW} van ${WEEKS}`;
   if(!schema)return;
-  const wk=schema[currentWeek-1];if(!wk)return;
+  const wk=schema[CW-1];if(!wk)return;
   const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
-  const wl=logs[`w${currentWeek}`]||{};
-  const tc=getTodayCode();const ti=DAYS.indexOf(tc);
-  document.getElementById('streak-dots').innerHTML=wk.dagen.map((d,i)=>{
-    const done=!!wl[d.dag];
+  const wl=logs[`w${CW}`]||{};
+  const td=wk.dagen.filter(d=>d.type!=='rest');
+  const dc=td.filter(d=>wl[d.dag]&&!wl[d.dag].missed).length;
+  const pct=Math.round(dc/Math.max(td.length,1)*100);
+  document.getElementById('schema-list').innerHTML=
+    `<div style="font-size:11px;color:var(--m);margin-bottom:10px;font-style:italic;line-height:1.5">${wk.focus||''}</div>`+
+    wk.dagen.map(d=>{
+      const done=!!wl[d.dag]&&!wl[d.dag].missed;
+      const missed=!!wl[d.dag]?.missed;
+      const dotCls=done?'dot-done':missed?'dot-dng':`dot-${d.type}`;
+      const tagCls=done?'tag-done':`tag-${d.type}`;
+      const tagTxt=done?'✓ gedaan':missed?'✕ gemist':d.type;
+      return `<div class="dr">
+        <div class="dot ${dotCls}"></div>
+        <div class="di">
+          <div class="dn">${d.dag} <span class="tag ${tagCls}">${tagTxt}</span></div>
+          <div class="dd">${d.beschrijving}</div>
+        </div>
+        ${d.type!=='rest'&&!done&&!missed?`<div class="das">
+          <button class="db" onclick="openDet('${d.dag}')">ℹ</button>
+          <button class="db" onclick="openLog('${d.dag}','${esc(d.beschrijving)}','${esc(d.detail||'')}')">Log</button>
+          <button class="db dbd" onclick="markDone('${d.dag}');renderSchema()">✓</button>
+          <button class="db" style="border-color:var(--dng);color:var(--dng)" onclick="markMissed('${d.dag}')">✕</button>
+        </div>`:done||missed?`<div class="das"><button class="db" style="font-size:9px" onclick="undoDone('${d.dag}')">↩</button></div>`:''}
+      </div>`;
+    }).join('');
+  document.getElementById('strk-card').style.display='block';
+  document.getElementById('strk-pct').textContent=pct+'%';
+  renderDots();
+}
+
+function renderDots(){
+  if(!schema)return;
+  const wk=schema[CW-1];if(!wk)return;
+  const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
+  const wl=logs[`w${CW}`]||{};
+  const tc=tdc();const ti=DAYS.indexOf(tc);
+  document.getElementById('sdots').innerHTML=wk.dagen.map((d,i)=>{
+    const done=!!wl[d.dag]&&!wl[d.dag].missed;
+    const missed=!!wl[d.dag]?.missed;
     const isT=i===ti;
-    let cls=i<ti?(done?'streak-done':'streak-miss'):(done?'streak-done':'streak-future');
-    return `<div class="streak-dot ${cls}${isT?' streak-today':''}">${done?'✓':d.dag.substring(0,1)}</div>`;
+    const cl=done?'sd-done':missed?'sd-miss':(i<ti?'sd-miss':'sd-fut');
+    return `<div class="sdot ${cl}${isT?' sd-today':''}">${done?'✓':missed?'✕':d.dag[0]}</div>`;
   }).join('');
 }
 
 function markDone(dag,notes){
   const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
-  const key=`w${currentWeek}`;
-  if(!logs[key])logs[key]={};
-  logs[key][dag]={done:true,ts:Date.now(),notes:notes||''};
+  const k=`w${CW}`;if(!logs[k])logs[k]={};
+  logs[k][dag]={done:true,ts:Date.now(),notes:notes||''};
   localStorage.setItem('rc_logs',JSON.stringify(logs));
-  updateStreakBadge();
+  updateStrk();
 }
 
 function undoDone(dag){
   const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
-  const key=`w${currentWeek}`;
-  if(logs[key])delete logs[key][dag];
+  const k=`w${CW}`;if(logs[k])delete logs[k][dag];
   localStorage.setItem('rc_logs',JSON.stringify(logs));
-  renderSchema();updateStreakBadge();
+  renderSchema();renderToday();updateStrk();
 }
 
 function markMissed(dag){
   const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
-  const key=`w${currentWeek}`;
-  if(!logs[key])logs[key]={};
-  logs[key][dag]={missed:true,ts:Date.now()};
+  const k=`w${CW}`;if(!logs[k])logs[k]={};
+  logs[k][dag]={missed:true,ts:Date.now()};
   localStorage.setItem('rc_logs',JSON.stringify(logs));
-  renderSchema();renderToday();updateStreakBadge();
-  // Coach advice
-  const d=schema?.[currentWeek-1]?.dagen?.find(x=>x.dag===dag);
-  switchTo('coach');
-  addBubble('user','Training gemist op '+dag+': '+(d?.beschrijving||''));
-  askCoach('Training gemist op '+dag+': '+(d?.beschrijving||'')+'. Geef kort advies hoe ik dit compenseer.');
-}
-
-document.getElementById('prev-week').addEventListener('click',()=>{if(currentWeek>1){currentWeek--;renderSchema();}});
-document.getElementById('next-week').addEventListener('click',()=>{if(currentWeek<(schema?.length||WEEKS)){currentWeek++;renderSchema();}});
-
-function openDetailModal(dag){
-  if(!schema)return;
-  const d=schema[currentWeek-1]?.dagen?.find(x=>x.dag===dag);if(!d)return;
-  document.getElementById('detail-modal-title').textContent=`${d.dag.toUpperCase()} — ${d.beschrijving}`;
-  const mhr=profile?.mhr||180;
-  const zns=calcHRZones(mhr);
-  const detTxt=d.detail&&d.detail.length>3?d.detail:d.beschrijving;
-  const zm=(detTxt||'').toLowerCase().match(/zone (\d)/);
-  const zn=zm?parseInt(zm[1]):2;
-  const z=zns[Math.min(zn-1,zns.length-1)]||zns[1];
-  document.getElementById('detail-modal-body').innerHTML=`
-    <span class="tag tag-${d.type}" style="margin-bottom:12px;display:inline-block">${d.type}</span>
-    <div style="font-size:13px;line-height:1.9;color:var(--text);margin-bottom:12px">${(()=>{const parts=detTxt.split('|').map(s=>s.trim());return parts.map(s=>s.startsWith('Warming')?'<div style="margin-bottom:6px"><strong style="color:var(--accent2)">🏃 '+s+'</strong></div>':s.startsWith('Hoofdwerk')?'<div style="margin-bottom:6px"><strong style="color:var(--accent)">⚡ '+s+'</strong></div>':s.startsWith('Cooling')?'<div style="margin-bottom:6px"><strong style="color:var(--accent3)">🧘 '+s+'</strong></div>':(s?'<div>'+s+'</div>':'' )).join('');})()}</div>
-    <div style="background:var(--surface2);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;font-size:13px;display:flex;gap:20px">
-      <div>&#x1F493; <strong>${z.min}&ndash;${z.max} spm</strong> <span style="color:var(--muted)">(${z.pct})</span></div>
-      <div>&#x1F4CA; <strong>${z.naam.split("\u2014")[0].trim()}</strong></div>
-    </div>
-    <button class="modal-btn" onclick="closeDetailModal();openLogModal('${d.dag}','${(d.beschrijving||'').replace(/'/g,"\\'")}')">Training loggen</button>`;
-  document.getElementById('detail-modal').classList.add('open');
-}
-function closeDetailModal(){document.getElementById('detail-modal').classList.remove('open');}
-document.getElementById('close-detail-modal').addEventListener('click',closeDetailModal);
-
-function openLogModal(dag,desc,detail){
-  logTargetDay=dag;logTargetDetail=detail||'';
-  document.getElementById('modal-day-info').textContent=`${dag}: ${desc}`;
-  const db=document.getElementById('modal-detail-box');
-  if(detail&&detail.length>10){db.textContent=detail.substring(0,200)+(detail.length>200?'…':'');db.style.display='block';}else db.style.display='none';
-  document.getElementById('log-input').value='';
-  document.getElementById('log-modal').classList.add('open');
-}
-document.getElementById('close-log-modal').addEventListener('click',()=>document.getElementById('log-modal').classList.remove('open'));
-document.getElementById('log-missed-btn')?.addEventListener('click',async()=>{
-  document.getElementById('log-modal').classList.remove('open');
-  // Mark as missed
-  const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
-  const key=`w${currentWeek}`;
-  if(!logs[key])logs[key]={};
-  logs[key][logTargetDay]={missed:true,ts:Date.now()};
-  localStorage.setItem('rc_logs',JSON.stringify(logs));
-  renderSchema();renderToday();
-  // Ask AI to reschedule
+  renderSchema();renderToday();updateStrk();
+  const d=schema?.[CW-1]?.dagen?.find(x=>x.dag===dag);
   goTo('coach');
-  const wk=schema?.[currentWeek-1];
-  const dag=wk?.dagen?.find(d=>d.dag===logTargetDay);
-  addBubble('user',`Ik heb mijn training van ${logTargetDay} gemist (${dag?.beschrijving||''}). Pas mijn schema aan voor de rest van de week.`);
-  await askCoachReschedule(logTargetDay, dag?.beschrijving||'');
-});
-
-async function askCoachReschedule(dag, training) {
-  showTyping();
-  const wk=schema?.[currentWeek-1];
-  const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
-  const wl=logs[`w${currentWeek}`]||{};
-  const resterendeDagen=wk?.dagen?.filter(d=>!wl[d.dag]&&d.dag!==dag&&d.type!=='rest')||[];
-
-  const sys=`Je bent RunCoach, coach voor ${profile.name}. Geef praktisch advies over het aanpassen van het trainingsschema na een gemiste training. Wees kort en positief.`;
-  const msg=`Training gemist op ${dag}: ${training}. Resterende trainingsdagen deze week: ${resterendeDagen.map(d=>d.dag+' ('+d.beschrijving+')').join(', ')||'geen'}. Geef concreet advies: wat te schrappen of verzwaren, en hoe te compenseren. Max 3 zinnen.`;
-
-  try{
-    const r=await callClaude([{role:'user',content:msg}],300,sys);
-    hideTyping();addBubble('ai',r);
-  }catch(e){hideTyping();addBubble('ai','Geen probleem, een gemiste training overkomt iedereen. Ga morgen gewoon verder met het schema.');}
+  addB('user','Training gemist op '+dag+': '+(d?.beschrijving||''));
+  askCoach('Training gemist op '+dag+': '+(d?.beschrijving||'')+'. Geef kort advies hoe ik dit compenseer in de rest van de week.');
 }
 
-document.getElementById('log-skip-btn').addEventListener('click',()=>{
-  document.getElementById('log-modal').classList.remove('open');
-  markDone(logTargetDay);renderSchema();renderToday();
-});
-document.getElementById('log-submit-btn').addEventListener('click',async()=>{
-  const txt=document.getElementById('log-input').value.trim();
-  document.getElementById('log-modal').classList.remove('open');
-  markDone(logTargetDay,txt);renderSchema();renderToday();
-  if(!txt)return;
-  switchTo('coach');addBubble('user',`Training gelogd (${logTargetDay}): ${txt}`);
-  await askCoach(`Ik heb mijn training gelogd: "${txt}". ${logTargetDetail?'Gepland was: '+logTargetDetail.substring(0,100)+'.':''} Geef motiverende feedback en 1 hersteltip.`);
+document.getElementById('pw').addEventListener('click',()=>{if(CW>1){CW--;renderSchema();}});
+document.getElementById('nw').addEventListener('click',()=>{if(CW<(schema?.length||WEEKS)){CW++;renderSchema();}});
+
+document.getElementById('del-btn').addEventListener('click',()=>{
+  if(!schema){alert('Geen schema.');return;}
+  if(!confirm('Schema verwijderen?'))return;
+  schema=null;localStorage.removeItem('rc_schema');syncUp();
+  document.getElementById('schema-list').innerHTML='<div style="text-align:center;padding:20px;color:var(--m);font-size:12px">Druk op Genereer voor je schema</div>';
+  document.getElementById('strk-card').style.display='none';
+  renderToday();
 });
 
-document.getElementById('edit-schema-btn').addEventListener('click',()=>{
+document.getElementById('edit-btn').addEventListener('click',()=>{
   if(!schema){alert('Genereer eerst een schema.');return;}
-  const wk=schema[currentWeek-1];
-  document.getElementById('edit-week-nr').textContent=currentWeek;
+  const wk=schema[CW-1];
+  document.getElementById('edit-wk').textContent=CW;
   document.getElementById('edit-rows').innerHTML=wk.dagen.map((d,i)=>`
-    <div class="edit-row">
-      <div class="edit-day-label">${d.dag}</div>
-      <select class="edit-select" id="et-${i}">${['run','bike','rest','cross','swim','walk'].map(t=>`<option value="${t}"${d.type===t?' selected':''}>${t}</option>`).join('')}</select>
-      <input class="edit-desc" id="ed-${i}" value="${(d.beschrijving||'').replace(/"/g,'&quot;')}" placeholder="Omschrijving">
+    <div class="er"><div class="edl">${d.dag}</div>
+    <select class="esel" id="et-${i}">${['run','bike','rest'].map(t=>`<option value="${t}"${d.type===t?' selected':''}>${t}</option>`).join('')}</select>
+    <input class="edesc" id="ed-${i}" value="${(d.beschrijving||'').replace(/"/g,'&quot;')}" placeholder="Omschrijving">
     </div>`).join('');
-  document.getElementById('edit-modal').classList.add('open');
+  document.getElementById('edit-mo').classList.add('open');
 });
-document.getElementById('close-edit-modal').addEventListener('click',()=>document.getElementById('edit-modal').classList.remove('open'));
-document.getElementById('save-edit-btn').addEventListener('click',()=>{
-  schema[currentWeek-1].dagen.forEach((d,i)=>{
+
+document.getElementById('edit-save').addEventListener('click',()=>{
+  schema[CW-1].dagen.forEach((d,i)=>{
     d.type=document.getElementById(`et-${i}`)?.value||d.type;
     d.beschrijving=document.getElementById(`ed-${i}`)?.value||d.beschrijving;
   });
   localStorage.setItem('rc_schema',JSON.stringify(schema));
-  document.getElementById('edit-modal').classList.remove('open');
-  renderSchema();renderToday();
+  closeM('edit-mo');renderSchema();renderToday();
 });
 
-function renderCharts(){
+// ═══ DETAIL MODAL ═══
+function openDet(dag){
+  if(!schema)return;
+  const d=schema[CW-1]?.dagen?.find(x=>x.dag===dag);if(!d)return;
+  const mhr=P?.mhr||180;
+  const zones=calcHRZones(mhr);
+  const det=d.detail&&d.detail.length>3?d.detail:d.beschrijving;
+  const zm=(det||'').toLowerCase().match(/zone\s*(\d)/);
+  const zn=zm?parseInt(zm[1]):2;
+  const z=zones[Math.min(zn-1,zones.length-1)]||zones[1];
+  document.getElementById('det-title').textContent=`${d.dag.toUpperCase()} — ${d.beschrijving}`;
+  document.getElementById('det-body').innerHTML=`
+    <span class="tag tag-${d.type}" style="margin-bottom:12px;display:inline-block">${d.type}</span>
+    <div style="font-size:13px;line-height:1.9;color:var(--t);margin-bottom:12px">${
+      det.split('|').map(s=>s.trim()).map(s=>
+        s.startsWith('Warming')?`<div style="margin-bottom:7px"><strong style="color:var(--a2)">🏃 ${s}</strong></div>`:
+        s.startsWith('Hoofdwerk')?`<div style="margin-bottom:7px"><strong style="color:var(--a)">⚡ ${s}</strong></div>`:
+        s.startsWith('Cooling')?`<div style="margin-bottom:7px"><strong style="color:var(--a3)">🧘 ${s}</strong></div>`:
+        `<div>${s}</div>`
+      ).join('')
+    }</div>
+    <div style="background:var(--s2);border-radius:var(--rs);padding:10px 12px;margin-bottom:14px;font-size:13px;display:flex;gap:20px">
+      <div>💓 <strong>${z.min}–${z.max} spm</strong> <span style="color:var(--m)">(${z.pct})</span></div>
+      <div>📊 <strong>${z.naam.split('—')[0].trim()}</strong></div>
+    </div>
+    <button class="mdbtn" onclick="closeM('det-mo');openLog('${d.dag}','${esc(d.beschrijving)}','${esc(d.detail||'')}')">Training loggen</button>`;
+  document.getElementById('det-mo').classList.add('open');
+}
+
+// ═══ LOG MODAL ═══
+function openLog(dag,desc,det){
+  logDay=dag;logDet=det||'';
+  document.getElementById('log-di').textContent=`${dag}: ${desc}`;
+  const db=document.getElementById('log-det');
+  if(det&&det.length>5){db.textContent=det.substring(0,180)+(det.length>180?'…':'');db.style.display='block';}
+  else db.style.display='none';
+  document.getElementById('log-in').value='';
+  document.getElementById('log-mo').classList.add('open');
+}
+
+document.getElementById('log-skip').addEventListener('click',()=>{closeM('log-mo');markDone(logDay);renderSchema();renderToday();});
+document.getElementById('log-miss').addEventListener('click',()=>{closeM('log-mo');markMissed(logDay);});
+document.getElementById('log-sub').addEventListener('click',async()=>{
+  const txt=document.getElementById('log-in').value.trim();
+  closeM('log-mo');markDone(logDay,txt);renderSchema();renderToday();
+  if(!txt)return;
+  goTo('coach');addB('user',`Training gelogd (${logDay}): ${txt}`);
+  await askCoach(`Training gelogd: "${txt}". ${logDet?'Gepland was: '+logDet.substring(0,80)+'.':''} Geef motiverende feedback en 1 hersteltip.`);
+});
+
+function closeM(id){document.getElementById(id).classList.remove('open');}
+
+// ═══ CHAT ═══
+function renderChat(){
+  const a=document.getElementById('chatw');
+  a.innerHTML=chat.map(m=>`<div class="bbl bbl-${m.r==='u'?'u':'ai'}">${m.c.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>`).join('');
+  a.scrollTop=a.scrollHeight;
+}
+function addB(role,text){
+  chat.push({r:role==='user'?'u':'ai',c:text});
+  if(chat.length>50)chat.splice(0,2);
+  localStorage.setItem('rc_chat',JSON.stringify(chat));
+  renderChat();
+}
+function showT(){const el=document.createElement('div');el.className='bbl bbl-t';el.id='tbbl';el.innerHTML='Coach denkt na<span class="ld"><span>.</span><span>.</span><span>.</span></span>';const a=document.getElementById('chatw');a.appendChild(el);a.scrollTop=a.scrollHeight;}
+function hideT(){document.getElementById('tbbl')?.remove();}
+
+async function askCoach(msg){
+  showT();
   const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
-  const data=Array.from({length:WEEKS},(_,i)=>{
-    const wk=schema?.[i];const wl=logs[`w${i+1}`]||{};
-    const planned=wk?.km_totaal||0;
-    const trainDays=wk?.dagen?.filter(d=>d.type!=='rest')||[];
-    const done=trainDays.filter(d=>wl[d.dag]).length;
-    return{planned,done,total:trainDays.length};
-  });
-  const labels=data.map((_,i)=>`W${i+1}`);
-  const planned=data.map(d=>d.planned);
-  const completed=data.map(d=>d.total?Math.round(d.planned*(d.done/d.total)*10)/10:0);
-  const pct=data.map(d=>d.total?Math.round(d.done/d.total*100):0);
-  const cfg={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e2333',borderColor:'rgba(255,255,255,.1)',borderWidth:1,titleColor:'#f0f0f0',bodyColor:'#7a8099',padding:10}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#7a8099',font:{size:10}}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#7a8099',font:{size:10}},beginAtZero:true}}};
-
-  if(charts.km)charts.km.destroy();
-  charts.km=new Chart(document.getElementById('chart-km'),{type:'bar',data:{labels,datasets:[{label:'Gepland',data:planned,backgroundColor:'rgba(200,240,96,.15)',borderColor:'#c8f060',borderWidth:1.5,borderRadius:4},{label:'Voltooid',data:completed,backgroundColor:'rgba(91,227,160,.45)',borderColor:'#5be3a0',borderWidth:1.5,borderRadius:4}]},options:{...cfg,plugins:{...cfg.plugins,legend:{display:true,labels:{color:'#7a8099',font:{size:10},boxWidth:10,padding:12}}}}});
-  document.getElementById('total-km-badge').textContent=Math.round(planned.reduce((a,b)=>a+b,0))+' km';
-
-  if(charts.sess)charts.sess.destroy();
-  charts.sess=new Chart(document.getElementById('chart-sessions'),{type:'line',data:{labels,datasets:[{data:pct,borderColor:'#60c8f0',backgroundColor:'rgba(96,200,240,.08)',borderWidth:2,pointBackgroundColor:'#60c8f0',pointRadius:4,tension:.35,fill:true}]},options:{...cfg,scales:{...cfg.scales,y:{...cfg.scales.y,max:100,ticks:{...cfg.scales.y.ticks,callback:v=>v+'%'}}}}});
-  const nonZero=pct.filter(x=>x>0);
-  document.getElementById('avg-comp-badge').textContent=nonZero.length?`gem. ${Math.round(nonZero.reduce((a,b)=>a+b,0)/nonZero.length)}%`:'—';
-
-  let counts={run:0,bike:0,cross:0,swim:0,walk:0};
-  if(schema)schema.forEach((wk,wi)=>{const wl=logs[`w${wi+1}`]||{};wk.dagen.forEach(d=>{if(wl[d.dag]&&d.type in counts)counts[d.type]++;});});
-  const te=Object.entries(counts).filter(([,v])=>v>0);
-  const tc2={run:'#c8f060',bike:'#60c8f0',cross:'#f0a860',swim:'#60a0f0',walk:'#c090f0'};
-  const tn={run:'Hardlopen',bike:'Fietsen',cross:'Cross',swim:'Zwemmen',walk:'Wandelen'};
-  if(charts.types)charts.types.destroy();
-  charts.types=new Chart(document.getElementById('chart-types'),{type:'doughnut',data:{labels:te.map(([k])=>k),datasets:[{data:te.length?te.map(([,v])=>v):[1],backgroundColor:te.length?te.map(([k])=>tc2[k]||'#888'):['#333'],borderWidth:0}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},cutout:'62%'}});
-  document.getElementById('chart-types-legend').innerHTML=te.map(([k,v])=>`<div style="display:flex;align-items:center;gap:7px"><div style="width:9px;height:9px;border-radius:50%;background:${tc2[k]};flex-shrink:0"></div><span style="color:var(--muted)">${tn[k]||k}: ${v}×</span></div>`).join('');
-
-  if(importedActivities.length>0){
-    document.getElementById('import-stats-card').style.display='block';
-    document.getElementById('strava-count-badge').textContent=importedActivities.length;
-    const recent=importedActivities.slice(0,16).reverse();
-    if(charts.stravaKm)charts.stravaKm.destroy();
-    charts.stravaKm=new Chart(document.getElementById('chart-strava-km'),{type:'bar',data:{labels:recent.map(a=>a.date?.substring(5,10)||'?'),datasets:[{data:recent.map(a=>a.distance||0),backgroundColor:recent.map(a=>a.type==='run'?'rgba(200,240,96,.55)':a.type==='bike'?'rgba(96,200,240,.55)':'rgba(240,168,96,.55)'),borderRadius:3}]},options:cfg});
-  }
+  const wl=logs[`w${CW}`]||{};
+  const wk=schema?.[CW-1];
+  const td=wk?.dagen?.filter(x=>x.type!=='rest')||[];
+  const dc=td.filter(x=>wl[x.dag]&&!wl[x.dag].missed).length;
+  const feel=JSON.parse(localStorage.getItem('rc_feelings')||'{}')[new Date().toDateString()]||'?';
+  const ra=acts.slice(0,4).map(a=>`${a.type} ${a.distance}km${a.date?' op '+a.date.substring(0,10):''}`).join('; ');
+  const sys=`Je bent RunCoach, coach voor ${P.name}. Profiel: doel=${P.goal}, gewicht=${P.weight}kg, max hartslag=${P.mhr||180} spm, fietsen=${P.cycling}. Status: week ${CW}/${WEEKS}, ${dc}/${td.length} sessies, gevoel=${feel}. Weekfocus: ${wk?.focus||'?'}. ${ra?'Recente activiteiten: '+ra+'.':''} Wees motiverend en concreet. Max 4 zinnen. Spreek ${P.name} aan.`;
+  const msgs=[...chat.slice(-12).map(m=>({role:m.r==='u'?'user':'assistant',content:m.c})),{role:'user',content:msg}];
+  try{const r=await callAI(msgs,500,sys);hideT();addB('ai',r);}
+  catch(e){hideT();addB('ai','Sorry, er ging iets mis.');}
 }
 
-function parseCSVLine(line){
-  const r=[];let cur='',inQ=false;
-  for(let i=0;i<line.length;i++){
-    const c=line[i];
-    if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}
-    else if(c===','&&!inQ){r.push(cur.trim());cur='';}
-    else cur+=c;
-  }
-  r.push(cur.trim());return r;
-}
+document.getElementById('csend').addEventListener('click',sendChat);
+document.getElementById('cin').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}});
+document.getElementById('cin').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,90)+'px';});
+async function sendChat(){const i=document.getElementById('cin');const m=i.value.trim();if(!m)return;i.value='';i.style.height='auto';addB('user',m);await askCoach(m);}
+function sq(m){goTo('coach');addB('user',m);askCoach(m);}
+async function autoGreet(){await askCoach(`Hoi! Ik ben ${P.name}, doel: ${P.goal}. ${P.cycling==='ja'?'Ik fiets ook.':''} Geef een korte welkomstbegroeting.`);}
 
-function normAct(obj){
-  const get=(...keys)=>{
-    for(const k of keys){
-      const f=Object.keys(obj).find(ok=>ok.toLowerCase()===k.toLowerCase()||ok.toLowerCase().replace(/[\s_]/g,'')===k.toLowerCase().replace(/[\s_]/g,''));
-      if(f&&obj[f]&&obj[f]!=='--'&&obj[f]!=='')return obj[f];
-    }
-    for(const k of keys){
-      const f=Object.keys(obj).find(ok=>ok.toLowerCase().includes(k.toLowerCase().split(' ')[0]));
-      if(f&&obj[f]&&obj[f]!=='--'&&obj[f]!=='')return obj[f];
-    }
-    return'';
-  };
-  const rt=(get('Activity Type','Type','Sport','activity_type','Activiteitstype')||'').toLowerCase();
-  let type='run';
-  if(rt.includes('ride')||rt.includes('cycling')||rt.includes('bike')||rt.includes('fiets')||rt.includes('virtual'))type='bike';
-  else if(rt.includes('swim')||rt.includes('zwem'))type='swim';
-  else if(rt.includes('walk')||rt.includes('hike')||rt.includes('wandel'))type='walk';
-  else if(rt.includes('strength')||rt.includes('yoga')||rt.includes('cross'))type='cross';
-  let dist=parseFloat((get('Distance','Afstand','Total Distance','distance')||'0').replace(',','.').replace(/[^\d.]/g,''))||0;
-  if(dist>500)dist=dist/1000;
-  return{type,name:get('Activity Name','Title','Name','Naam','Activiteitsnaam')||rt||'Training',distance:Math.round(dist*10)/10,time:get('Moving Time','Elapsed Time','Time','Duration','Tijd'),date:(get('Activity Date','Date','Start Time','Datum','date','start_date')||'').substring(0,16),hr:get('Average Heart Rate','Avg HR','Hartslag')?Math.round(parseFloat(get('Average Heart Rate','Avg HR','Hartslag'))):null,elev:get('Elevation Gain','Total Ascent','Stijging')?Math.round(parseFloat(get('Elevation Gain','Total Ascent','Stijging'))):null};
-}
-
-document.getElementById('upload-area').addEventListener('click',()=>document.getElementById('file-input').click());
-document.getElementById('file-input').addEventListener('change',e=>{
-  const f=e.target.files[0];if(!f)return;
-  const r=new FileReader();
-  r.onload=ev=>handleCSV(ev.target.result,f.name);
-  r.readAsText(f,'UTF-8');e.target.value='';
-});
-
-function handleCSV(text,fn){
-  const lines=text.split(/\r?\n/).filter(l=>l.trim());
-  if(lines.length<2){showStatus('error',`"${fn}" lijkt leeg.`);return;}
-  const hdrs=parseCSVLine(lines[0]);
-  if(hdrs.length<2){showStatus('error','Kon geen kolommen lezen. Correct CSV bestand?');return;}
-  const acts=[];
-  for(let i=1;i<lines.length;i++){
-    if(!lines[i].trim())continue;
-    const vals=parseCSVLine(lines[i]);
-    const obj={};hdrs.forEach((h,idx)=>{obj[h]=vals[idx]||'';});
-    const a=normAct(obj);
-    if(a.distance>0||a.time||a.date)acts.push(a);
-  }
-  if(!acts.length){showStatus('error',`Geen activiteiten herkend in "${fn}".\nKolommen: ${hdrs.slice(0,6).join(', ')}…`);return;}
-  importedActivities=[...acts,...importedActivities].slice(0,300);
-  localStorage.setItem('rc_activities',JSON.stringify(importedActivities));
-  renderActivitiesList();showStatus('ok',`✅ ${acts.length} activiteiten geïmporteerd uit "${fn}"`);
-}
-
-function showStatus(t,msg){
-  const el=document.getElementById('csv-status');
-  el.style.cssText=`color:${t==='ok'?'var(--accent2)':'var(--danger)'};font-size:12px;line-height:1.5;padding:8px 0;white-space:pre-line`;
-  el.textContent=msg;
-}
-
-function renderActivitiesList(){
-  if(!importedActivities.length)return;
-  document.getElementById('all-activities-card').style.display='block';
-  document.getElementById('activities-count').textContent=importedActivities.length;
-  const ic={run:'🏃',bike:'🚴',swim:'🏊',walk:'🚶',cross:'🏋️'};
-  document.getElementById('all-activities-list').innerHTML=importedActivities.slice(0,30).map(a=>`
-    <div class="act-item">
-      <div class="act-icon">${ic[a.type]||'🏃'}</div>
-      <div class="act-info">
-        <div class="act-name">${a.name}</div>
-        <div class="act-meta">${a.distance?a.distance+' km':''}${a.time?' · '+a.time:''}${a.date?' · '+a.date.substring(0,10):''}${a.hr?' · ♥ '+a.hr:''}${a.elev?' · ↑'+a.elev+'m':''}</div>
-      </div>
-    </div>`).join('');
-}
-
-document.getElementById('strava-auth-btn').addEventListener('click',()=>{
-  const id=document.getElementById('strava-client-id').value.trim();
-  const sec=document.getElementById('strava-client-secret').value.trim();
-  if(!id||!sec){alert('Vul Client ID en Secret in');return;}
-  localStorage.setItem('rc_strava_creds',JSON.stringify({clientId:id,clientSecret:sec}));
-  const redir=window.location.href.split('?')[0].split('#')[0];
-  window.location.href=`https://www.strava.com/oauth/authorize?client_id=${id}&redirect_uri=${encodeURIComponent(redir)}&response_type=code&scope=activity:read_all&approval_prompt=auto`;
-});
-
-async function checkStravaCallback(){
-  const p=new URLSearchParams(window.location.search);
-  const code=p.get('code');if(!code)return;
-  window.history.replaceState({},'',window.location.pathname);
-  const creds=JSON.parse(localStorage.getItem('rc_strava_creds')||'null');if(!creds)return;
-  try{
-    const r=await fetch('https://www.strava.com/oauth/token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:creds.clientId,client_secret:creds.clientSecret,code,grant_type:'authorization_code'})});
-    if(!r.ok)throw new Error(await r.text());
-    const d=await r.json();
-    stravaToken={access_token:d.access_token,refresh_token:d.refresh_token,expires_at:d.expires_at,athlete:d.athlete};
-    localStorage.setItem('rc_strava',JSON.stringify(stravaToken));
-    updateStravaUI();switchTo('activities');syncStravaActivities();
-  }catch(e){alert('Strava koppeling mislukt: '+e.message);}
-}
-
-async function refreshStravaToken(){
-  if(!stravaToken)return false;
-  if(stravaToken.expires_at*1000>Date.now())return true;
-  const c=JSON.parse(localStorage.getItem('rc_strava_creds')||'null');if(!c)return false;
-  try{const r=await fetch('https://www.strava.com/oauth/token',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({client_id:c.clientId,client_secret:c.clientSecret,refresh_token:stravaToken.refresh_token,grant_type:'refresh_token'})});const d=await r.json();stravaToken.access_token=d.access_token;stravaToken.refresh_token=d.refresh_token;stravaToken.expires_at=d.expires_at;localStorage.setItem('rc_strava',JSON.stringify(stravaToken));return true;}catch(e){return false;}
-}
-
-async function syncStravaActivities(){
-  const btn=document.getElementById('strava-sync-btn');
-  if(btn){btn.textContent='↻ Bezig…';btn.disabled=true;}
-  const ok=await refreshStravaToken();
-  if(!ok){alert('Token verlopen, koppel opnieuw.');if(btn){btn.textContent='↻ Synchroniseer activiteiten';btn.disabled=false;}return;}
-  try{
-    const r=await fetch('https://www.strava.com/api/v3/athlete/activities?per_page=80',{headers:{Authorization:`Bearer ${stravaToken.access_token}`}});
-    if(!r.ok)throw new Error(await r.text());
-    const acts=await r.json();
-    importedActivities=acts.map(a=>({type:a.type?.toLowerCase().includes('ride')||a.type?.toLowerCase().includes('virtual')?'bike':a.type?.toLowerCase().includes('swim')?'swim':a.type?.toLowerCase().includes('walk')?'walk':'run',name:a.name,distance:Math.round(a.distance/100)/10,time:fmtSec(a.moving_time),date:a.start_date_local?.substring(0,16)||'',hr:a.average_heartrate?Math.round(a.average_heartrate):null,elev:a.total_elevation_gain?Math.round(a.total_elevation_gain):null}));
-    localStorage.setItem('rc_activities',JSON.stringify(importedActivities));
-    renderActivitiesList();showStatus('ok',`✅ ${importedActivities.length} Strava activiteiten gesynchroniseerd`);
-  }catch(e){alert('Sync mislukt: '+e.message);}
-  if(btn){btn.textContent='↻ Synchroniseer activiteiten';btn.disabled=false;}
-}
-
-function updateStravaUI(){
-  if(stravaToken?.athlete){
-    document.getElementById('strava-connect-area').style.display='none';
-    document.getElementById('strava-connected-area').style.display='block';
-    const n=`${stravaToken.athlete.firstname||''} ${stravaToken.athlete.lastname||''}`.trim();
-    document.getElementById('strava-athlete-name').textContent=`Verbonden als ${n||'atleet'}`;
-    document.getElementById('strava-status-badge').textContent='Verbonden';
-    document.getElementById('strava-status-badge').className='badge badge-green';
-  }
-}
-
-document.getElementById('strava-sync-btn').addEventListener('click',syncStravaActivities);
-document.getElementById('strava-disconnect-btn').addEventListener('click',()=>{
-  stravaToken=null;localStorage.removeItem('rc_strava');localStorage.removeItem('rc_strava_creds');
-  document.getElementById('strava-connect-area').style.display='block';
-  document.getElementById('strava-connected-area').style.display='none';
-  document.getElementById('strava-status-badge').textContent='Niet gekoppeld';
-  document.getElementById('strava-status-badge').className='badge badge-orange';
-});
-
-function fmtSec(s){if(!s)return'';const h=Math.floor(s/3600),m=Math.floor(s%3600/60),sec=s%60;return h>0?`${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`:`${m}:${String(sec).padStart(2,'0')}`;}
-
-document.getElementById('generate-food-btn').addEventListener('click',async()=>{
-  const btn=document.getElementById('generate-food-btn');btn.textContent='...';btn.disabled=true;
+// ═══ VOEDING ═══
+document.getElementById('gen-food').addEventListener('click',async()=>{
+  const btn=document.getElementById('gen-food');btn.textContent='...';btn.disabled=true;
   const today=new Date().toLocaleDateString('nl-NL',{weekday:'long'});
-  const wk=schema?.[currentWeek-1];
-  const todayTraining=wk?.dagen?.find(d=>d.dag===getTodayCode());
-  const ra=importedActivities.slice(0,4).map(a=>`${a.type} ${a.distance}km`).join(', ');
+  const wk=schema?.[CW-1];
+  const td=wk?.dagen?.find(d=>d.dag===tdc());
+  const ra=acts.slice(0,3).map(a=>`${a.type} ${a.distance}km`).join(', ');
   const feel=JSON.parse(localStorage.getItem('rc_feelings')||'{}')[new Date().toDateString()]||'';
-  const p=`Sportdiëtist. Voedingsplan voor ${today}. Atleet: ${profile.weight}kg, ${profile.height}cm, doel: ${profile.goal}. Training vandaag: ${todayTraining?todayTraining.beschrijving:'rust'}. ${ra?'Recente trainingen: '+ra+'.':''} ${feel?'Gevoel: '+feel+'.':''} ALLEEN JSON: {"kcal":getal,"eiwit":getal,"koolhydraten":getal,"vet":getal,"maaltijden":[{"naam":"Ontbijt","items":[{"naam":"item","kcal":getal}]}]} — 4 maaltijden, max 5 items elk.`;
+  const prompt=`Sportdiëtist. Voedingsplan voor ${today}. Atleet: ${P.weight}kg, ${P.height}cm, doel: ${P.goal}. Training vandaag: ${td?td.beschrijving:'rust'}. ${ra?'Recente trainingen: '+ra+'.':''} ${feel?'Gevoel: '+feel+'.':''} UITSLUITEND JSON: {"kcal":2100,"eiwit":140,"koolhydraten":240,"vet":65,"maaltijden":[{"naam":"Ontbijt","items":[{"naam":"Havermout met banaan","kcal":380}]}]}`;
   try{
-    const res=await callClaude([{role:'user',content:p}],900);
-    const plan=JSON.parse(res.replace(/```(?:json)?\n?|\n?```/g,'').trim());
-    document.getElementById('m-kcal').textContent=plan.kcal;document.getElementById('m-prot').textContent=plan.eiwit;document.getElementById('m-carb').textContent=plan.koolhydraten;
-    document.getElementById('macro-card').style.display='block';
-    document.getElementById('food-plan').innerHTML=plan.maaltijden.map(m=>`<div class="meal-block"><div class="meal-title">${m.naam}</div>${m.items.map(i=>`<div class="food-item"><span>${i.naam}</span><span class="food-kcal">${i.kcal} kcal</span></div>`).join('')}</div>`).join('');
-  }catch(e){alert('Voedingsplan mislukt: '+e.message);}
+    const res=await callAI([{role:'user',content:prompt}],900);
+    const si=res.indexOf('{'),ei=res.lastIndexOf('}');
+    const plan=JSON.parse(res.substring(si,ei+1));
+    document.getElementById('m-kc').textContent=plan.kcal;
+    document.getElementById('m-pr').textContent=plan.eiwit;
+    document.getElementById('m-cb').textContent=plan.koolhydraten;
+    document.getElementById('macro-c').style.display='block';
+    document.getElementById('food-plan').innerHTML=plan.maaltijden.map(m=>`<div class="mb"><div class="mt">${m.naam}</div>${m.items.map(i=>`<div class="fi-row"><span>${i.naam}</span><span class="fkc">${i.kcal} kcal</span></div>`).join('')}</div>`).join('');
+  }catch(e){alert('Voedingsplan mislukt.');}
   btn.textContent='⟳ Genereer';btn.disabled=false;
 });
 
-function renderChat(){
-  const a=document.getElementById('chat-area');
-  a.innerHTML=chatHistory.map(m=>`<div class="bubble bubble-${m.role==='user'?'user':'ai'}">${m.content.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>`).join('');
-  a.scrollTop=a.scrollHeight;
-}
-function addBubble(role,text){
-  chatHistory.push({role,content:text});
-  if(chatHistory.length>50)chatHistory.splice(0,2);
-  localStorage.setItem('rc_chat',JSON.stringify(chatHistory));
-  renderChat();
-}
-function showTyping(){
-  const el=document.createElement('div');el.className='bubble bubble-typing';el.id='typing-bubble';
-  el.innerHTML='Coach denkt na<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span>';
-  const a=document.getElementById('chat-area');a.appendChild(el);a.scrollTop=a.scrollHeight;
-}
-function removeTyping(){document.getElementById('typing-bubble')?.remove();}
+// ═══ CSV ═══
+document.getElementById('uarea').addEventListener('click',()=>document.getElementById('ffile').click());
+document.getElementById('ffile').addEventListener('change',e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();r.onload=ev=>handleCSV(ev.target.result,f.name);r.readAsText(f,'UTF-8');e.target.value='';
+});
 
-async function askCoach(msg){
-  showTyping();
-  const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
-  const wl=logs[`w${currentWeek}`]||{};
-  const wk=schema?.[currentWeek-1];
-  const trainDays=wk?.dagen?.filter(d=>d.type!=='rest')||[];
-  const doneCount=trainDays.filter(d=>wl[d.dag]).length;
-  const feel=JSON.parse(localStorage.getItem('rc_feelings')||'{}')[new Date().toDateString()]||'onbekend';
-  const ra=importedActivities.slice(0,5).map(a=>`${a.type} ${a.distance}km${a.date?' op '+a.date.substring(0,10):''}${a.hr?' (♥'+a.hr+')':''}`).join('; ');
-  const sys=`Je bent RunCoach, persoonlijke sport- en voedingscoach voor ${profile.name}. Profiel: niveau=${profile.runLevel}, doel=${profile.goal}, gewicht=${profile.weight}kg, lengte=${profile.height}cm, fietsen=${profile.cycling}, max hartslag=${profile.mhr||180} spm (zone2=${Math.round((profile.mhr||180)*.6)}-${Math.round((profile.mhr||180)*.7)} spm). Status: week ${currentWeek}/${WEEKS}, ${doneCount}/${trainDays.length} sessies gedaan, streak=${calcStreak()}, gevoel vandaag=${feel}. Weekfocus: ${wk?.focus||'?'}. ${ra?'Recente activiteiten: '+ra+'.':''} Wees motiverend, persoonlijk en concreet. Max 4-5 zinnen tenzij gevraagd. Spreek ${profile.name} aan.`;
-  const msgs=[...chatHistory.slice(-12).map(m=>({role:m.role==='ai'?'assistant':m.role,content:m.content})),{role:'user',content:msg}];
-  try{const r=await callClaude(msgs,500,sys);removeTyping();addBubble('ai',r);}
-  catch(e){removeTyping();addBubble('ai','Sorry, er ging iets mis. Probeer het opnieuw.');console.error(e);}
+function parseLine(line){const r=[];let cur='',inQ=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'){if(inQ&&line[i+1]==='"'){cur+='"';i++;}else inQ=!inQ;}else if(c===','&&!inQ){r.push(cur.trim());cur='';}else cur+=c;}r.push(cur.trim());return r;}
+
+function normAct(obj){
+  const g=(...ks)=>{for(const k of ks){const f=Object.keys(obj).find(ok=>ok.toLowerCase().replace(/[\s_]/g,'')===(k+'').toLowerCase().replace(/[\s_]/g,''));if(f&&obj[f]&&obj[f]!=='--')return obj[f];}return'';};
+  const rt=(g('ActivityType','Type','Sport')||'').toLowerCase();
+  let tp='run';
+  if(rt.includes('ride')||rt.includes('bike')||rt.includes('fiets'))tp='bike';
+  else if(rt.includes('swim'))tp='swim';
+  else if(rt.includes('walk')||rt.includes('hike'))tp='walk';
+  let dist=parseFloat((g('Distance','Afstand','TotalDistance')||'0').replace(',','.').replace(/[^\d.]/g,''))||0;
+  if(dist>500)dist=dist/1000;
+  return{tp,name:g('ActivityName','Title','Name','Naam')||rt||'Training',distance:Math.round(dist*10)/10,time:g('MovingTime','ElapsedTime','Time','Duration'),date:(g('ActivityDate','Date','StartTime','Datum')||'').substring(0,10),hr:g('AverageHeartRate','AvgHR')?Math.round(parseFloat(g('AverageHeartRate','AvgHR'))):null};
 }
 
-document.getElementById('send-btn').addEventListener('click',sendChat);
-document.getElementById('chat-input').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}});
-async function sendChat(){const input=document.getElementById('chat-input');const msg=input.value.trim();if(!msg)return;input.value='';input.style.height='auto';addBubble('user',msg);await askCoach(msg);}
-function sendQuick(msg){switchTo('coach');addBubble('user',msg);askCoach(msg);}
-async function autoGreet(){await askCoach(`Hoi! Ik ben ${profile.name}, ${profile.runLevel} loper met doel: ${profile.goal}. ${profile.cycling==='ja'?'Ik fiets ook regelmatig.':''} Geef een korte welkomstbegroeting en leg uit wat ik allemaal kan met deze app.`);}
-
-function calcHRZones(mhr) {
-  return [
-    {nr:1, naam:'Zone 1 — Herstel',    pct:'50-60%', min:Math.round(mhr*.50), max:Math.round(mhr*.60), kleur:'#60c8f0', uitleg:'Wandelen, warming-up. Actief herstel.'},
-    {nr:2, naam:'Zone 2 — Duurloop',   pct:'60-70%', min:Math.round(mhr*.60), max:Math.round(mhr*.70), kleur:'#5be3a0', uitleg:'Rustige duurlopen. Vetverbranding. Basis van je training.'},
-    {nr:3, naam:'Zone 3 — Tempo',      pct:'70-80%', min:Math.round(mhr*.70), max:Math.round(mhr*.80), kleur:'#c8f060', uitleg:'Comfortabel hard. Tempoduurlopen.'},
-    {nr:4, naam:'Zone 4 — Drempel',    pct:'80-90%', min:Math.round(mhr*.80), max:Math.round(mhr*.90), kleur:'#f0a860', uitleg:'Anaerobe drempel. Intervallen en tempowerk.'},
-    {nr:5, naam:'Zone 5 — Maximaal',   pct:'90-100%',min:Math.round(mhr*.90), max:mhr,                  kleur:'#f06060', uitleg:'Sprint en VO2max. Kort en intensief.'},
-  ];
+function handleCSV(text,fn){
+  const lines=text.split(/\r?\n/).filter(l=>l.trim());
+  if(lines.length<2){setSt('error','Bestand lijkt leeg.');return;}
+  const hdrs=parseLine(lines[0]);if(hdrs.length<2){setSt('error','Kon kolommen niet lezen.');return;}
+  const res=[];
+  for(let i=1;i<lines.length;i++){if(!lines[i].trim())continue;const vals=parseLine(lines[i]);const obj={};hdrs.forEach((h,idx)=>{obj[h]=vals[idx]||'';});const a=normAct(obj);if(a.distance>0||a.time)res.push(a);}
+  if(!res.length){setSt('error',`Geen activiteiten herkend.\nKolommen: ${hdrs.slice(0,5).join(', ')}`);return;}
+  acts=[...res,...acts].slice(0,300);localStorage.setItem('rc_activities',JSON.stringify(acts));renderActs();setSt('ok',`✅ ${res.length} activiteiten geïmporteerd`);
+}
+function setSt(t,m){const el=document.getElementById('csv-st');el.style.cssText=`color:${t==='ok'?'var(--a2)':'var(--dng)'};font-size:11px;line-height:1.5;padding:7px 0;white-space:pre-line`;el.textContent=m;}
+function renderActs(){
+  if(!acts.length)return;
+  document.getElementById('acts-card').style.display='block';
+  document.getElementById('acts-cnt').textContent=acts.length;
+  const ic={run:'🏃',bike:'🚴',swim:'🏊',walk:'🚶'};
+  document.getElementById('acts-list').innerHTML=acts.slice(0,25).map(a=>`<div class="aitem"><div class="aicon">${ic[a.tp]||'🏃'}</div><div class="ainfo"><div class="aname">${a.name}</div><div class="ameta">${a.distance?a.distance+' km':''}${a.time?' · '+a.time:''}${a.date?' · '+a.date:''}${a.hr?' · ♥'+a.hr:''}</div></div></div>`).join('');
 }
 
-function renderHRZones() {
-  const mhr = profile?.mhr || 180;
-  const badge = document.getElementById('hr-mhr-badge');
-  if(badge) badge.textContent = `Max: ${mhr} spm`;
-  const zones = calcHRZones(mhr);
-  const list = document.getElementById('hr-zones-list');
-  if(!list) return;
-  list.innerHTML = zones.map(z => `
-    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)">
-      <div style="width:4px;height:36px;border-radius:2px;background:${z.kleur};flex-shrink:0"></div>
-      <div style="flex:1">
-        <div style="font-size:12px;font-weight:500;margin-bottom:2px">${z.naam}</div>
-        <div style="font-size:11px;color:var(--muted)">${z.min}–${z.max} spm · ${z.uitleg}</div>
-      </div>
-      <div style="font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);flex-shrink:0">${z.pct}</div>
-    </div>`).join('');
-}
-
-function renderProfile(){
-  if(!profile)return;
-  document.getElementById('profile-card').innerHTML=`
-    <div class="card-header"><div class="card-title">${profile.name}</div><span class="badge badge-yellow">${profile.runLevel}</span></div>
-    <div style="display:flex;flex-direction:column;gap:9px;font-size:13px">
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Huidige afstand</span><span>${profile.currentDist||"?"}km</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Doel</span><span>${profile.goal}</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Fietsen</span><span>${profile.cycling==='ja'?'Ja':'Nee'}</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Trainingsdagen</span><span>${profile.days}× per week</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Gewicht / lengte</span><span>${profile.weight} kg / ${profile.height} cm</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Leeftijd</span><span>${profile.age||'?'} jaar</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Max hartslag</span><span>${profile.mhr||180} spm</span></div>
-      <div style="display:flex;justify-content:space-between"><span style="color:var(--muted)">Gestart op</span><span>${new Date(profile.startDate).toLocaleDateString('nl-NL')}</span></div>
-      <div style="display:flex;justify-content:space-between;align-items:center"><span style="color:var(--muted)">Proxy URL</span><span style="font-size:11px;color:var(--accent3);word-break:break-all;text-align:right;max-width:60%">${profile.proxyUrl||'niet ingesteld'}</span></div>
+// ═══ PROFIEL ═══
+function renderProf(){
+  if(!P)return;
+  document.getElementById('prof-card').innerHTML=`
+    <div class="ch"><div class="ct">${P.name}</div><span class="badge by">${P.runLevel||''}</span></div>
+    <div style="display:flex;flex-direction:column;gap:8px;font-size:12px">
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--m)">Doel</span><span>${P.goal}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--m)">Huidige afstand</span><span>${P.currentDist||'?'} km</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--m)">Fietsen</span><span>${P.cycling==='ja'?'Ja':'Nee'}</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--m)">Schema</span><span>${P.weeks||12} weken · ${P.days||4}×/week</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--m)">Gewicht / lengte</span><span>${P.weight}kg / ${P.height}cm</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--m)">Max hartslag</span><span>${P.mhr||180} spm</span></div>
+      <div style="display:flex;justify-content:space-between"><span style="color:var(--m)">Gestart</span><span>${new Date(P.startDate).toLocaleDateString('nl-NL')}</span></div>
     </div>`;
 }
 
-document.getElementById('save-settings-btn').addEventListener('click',()=>{
-  const newKey=document.getElementById('edit-apikey').value.trim();
-  const newProxy=document.getElementById('edit-proxy').value.trim().replace(/\/+$/,'');
-  if(newKey) profile.apiKey=newKey;
-  if(newProxy) profile.proxyUrl=newProxy;
-  if(!newKey&&!newProxy){alert('Vul minimaal één veld in.');return;}
-  localStorage.setItem('rc_profile',JSON.stringify(profile));
-  document.getElementById('edit-apikey').value='';
-  document.getElementById('edit-proxy').value='';
-  renderProfile();
-  alert('✅ Instellingen opgeslagen! Probeer nu opnieuw het schema te genereren.');
+// ═══ HR ZONES ═══
+function calcHRZones(mhr){
+  return[
+    {nr:1,naam:'Zone 1 — Herstel',pct:'50–60%',min:Math.round(mhr*.5),max:Math.round(mhr*.6),kleur:'#60c8f0'},
+    {nr:2,naam:'Zone 2 — Duurloop',pct:'60–70%',min:Math.round(mhr*.6),max:Math.round(mhr*.7),kleur:'#5be3a0'},
+    {nr:3,naam:'Zone 3 — Tempo',pct:'70–80%',min:Math.round(mhr*.7),max:Math.round(mhr*.8),kleur:'#c8f060'},
+    {nr:4,naam:'Zone 4 — Drempel',pct:'80–90%',min:Math.round(mhr*.8),max:Math.round(mhr*.9),kleur:'#f0a860'},
+    {nr:5,naam:'Zone 5 — Maximaal',pct:'90–100%',min:Math.round(mhr*.9),max:mhr,kleur:'#f06060'},
+  ];
+}
+
+function renderHR(){
+  const mhr=P?.mhr||180;
+  document.getElementById('hr-badge').textContent=`Max: ${mhr} spm`;
+  document.getElementById('hr-zones').innerHTML=calcHRZones(mhr).map(z=>`
+    <div class="zone-row">
+      <div class="zone-bar" style="background:${z.kleur}"></div>
+      <div class="zone-info"><div class="zone-name">${z.naam}</div><div class="zone-detail">${z.min}–${z.max} spm</div></div>
+      <div class="zone-pct">${z.pct}</div>
+    </div>`).join('');
+}
+
+document.getElementById('save-hr').addEventListener('click',()=>{
+  const age=parseInt(document.getElementById('edit-age').value)||P?.age||30;
+  const mhr=parseInt(document.getElementById('edit-mhr').value)||(220-age);
+  P.age=age;P.mhr=mhr;localStorage.setItem('rc_profile',JSON.stringify(P));renderHR();renderProf();
 });
 
-document.getElementById('feedback-btn').addEventListener('click',async()=>{
-  const txt=document.getElementById('feedback-input').value.trim();if(!txt)return;
-  switchTo('coach');addBubble('user',`Feedback: ${txt}`);
-  await askCoach(`Feedback over mijn trainingen: "${txt}". Reageer empathisch, erken mijn ervaring, en stel 1-2 concrete aanpassingen voor.`);
-  document.getElementById('feedback-input').value='';
+document.getElementById('save-api').addEventListener('click',()=>{
+  const k=document.getElementById('edit-api').value.trim();
+  if(!k){alert('Vul een API key in');return;}
+  P.apiKey=k;localStorage.setItem('rc_profile',JSON.stringify(P));
+  document.getElementById('api-msg').textContent='✅ Opgeslagen';
+  document.getElementById('edit-api').value='';
+  setTimeout(()=>{document.getElementById('api-msg').textContent='';},3000);
 });
-document.getElementById('sync-now-btn')?.addEventListener('click', async()=>{
-  const btn=document.getElementById('sync-now-btn');
+
+document.getElementById('sync-btn').addEventListener('click',async()=>{
+  const btn=document.getElementById('sync-btn');
   const msg=document.getElementById('sync-msg');
   btn.textContent='↻ Bezig...';btn.disabled=true;
-  await syncToCloud();
-  const ok=await syncFromCloud();
+  await syncUp();
+  const ok=await syncDown();
   btn.textContent='↻ Nu synchroniseren';btn.disabled=false;
-  msg.textContent=ok?'✅ Gesynchroniseerd op '+new Date().toLocaleTimeString('nl-NL'):'⚠️ Sync mislukt';
-  renderToday();renderSchema();renderProfile();
-});
-document.getElementById('save-apikey-btn')?.addEventListener('click',()=>{
-  const key=document.getElementById('edit-apikey').value.trim();
-  if(!key){alert('Vul een API key in');return;}
-  profile.apiKey=key;
-  localStorage.setItem('rc_profile',JSON.stringify(profile));
-  document.getElementById('apikey-status').textContent='✅ API key opgeslagen';
-  document.getElementById('edit-apikey').value='';
-  setTimeout(()=>{document.getElementById('apikey-status').textContent='';},3000);
-});
-document.getElementById('sync-now-btn')?.addEventListener('click',async()=>{
-  const btn=document.getElementById('sync-now-btn');
-  const msg=document.getElementById('sync-msg');
-  btn.textContent='↻ Bezig...';btn.disabled=true;
-  const uploadOk = await syncToCloud();
-  const downloadOk = await syncFromCloud();
-  btn.textContent='↻ Nu synchroniseren';btn.disabled=false;
-  const uid = getUserId();
-  if(downloadOk) {
-    msg.textContent='✅ Gesynchroniseerd om '+new Date().toLocaleTimeString('nl-NL');
-    // Herlaad alle data uit localStorage
-    profile=JSON.parse(localStorage.getItem('rc_profile')||'null');
+  if(ok){
+    P=JSON.parse(localStorage.getItem('rc_profile')||'null');
+    WEEKS=P?.weeks||12;
     schema=JSON.parse(localStorage.getItem('rc_schema')||'null');
-    chatHistory=JSON.parse(localStorage.getItem('rc_chat')||'[]');
-    importedActivities=JSON.parse(localStorage.getItem('rc_activities')||'[]');
-    renderToday();renderSchema();renderProfile();renderActivitiesList();renderChat();updateStreakBadge();
-  } else if(uploadOk) {
-    msg.textContent='✅ Opgeslagen in cloud (nog geen data van andere apparaten)';
+    chat=JSON.parse(localStorage.getItem('rc_chat')||'[]');
+    acts=JSON.parse(localStorage.getItem('rc_activities')||'[]');
+    renderToday();renderSchema();renderProf();renderActs();renderChat();updateStrk();
+    msg.textContent='✅ Gesynchroniseerd om '+new Date().toLocaleTimeString('nl-NL');
   } else {
-    msg.textContent='⚠️ Sync mislukt. User ID: '+uid;
+    msg.textContent='⚠️ Sync mislukt';
   }
 });
-document.getElementById('save-hr-btn')?.addEventListener('click',()=>{
-  const age=parseInt(document.getElementById('edit-age')?.value)||profile?.age||30;
-  const mhr=parseInt(document.getElementById('edit-mhr')?.value)||(220-age);
-  profile.age=age;profile.mhr=mhr;
-  localStorage.setItem('rc_profile',JSON.stringify(profile));
-  renderHRZones();renderProfile();
-  alert('✅ Hartslagzones opgeslagen!');
-});
-document.getElementById('save-userid-btn')?.addEventListener('click',async()=>{
-  const newId=document.getElementById('edit-userid').value.trim();
-  if(!newId){alert('Vul een ID in');return;}
-  localStorage.setItem('rc_userid',newId);
-  document.getElementById('show-userid').textContent=newId;
-  document.getElementById('edit-userid').value='';
-  // Sync with new ID
-  const btn=document.getElementById('sync-now-btn');
-  btn.click();
-});
-document.getElementById('switch-profile-btn')?.addEventListener('click',()=>{
-  localStorage.removeItem('rc_userid');
-  showLoginScreen();
-});
-document.getElementById('reset-btn').addEventListener('click',()=>{if(confirm('Alle data wissen?')){localStorage.clear();location.reload();}});
 
-async function callClaude(messages,maxTokens=800,system=null){
+document.getElementById('fb-btn').addEventListener('click',async()=>{
+  const txt=document.getElementById('fb-in').value.trim();if(!txt)return;
+  goTo('coach');addB('user','Feedback: '+txt);
+  await askCoach(`Feedback: "${txt}". Reageer empathisch en stel aanpassingen voor.`);
+  document.getElementById('fb-in').value='';
+});
+
+document.getElementById('switch-btn').addEventListener('click',()=>{
+  localStorage.removeItem('rc_uid');showLogin();
+});
+document.getElementById('reset-btn').addEventListener('click',()=>{
+  if(confirm('Alle data wissen?')){localStorage.clear();location.reload();}
+});
+
+// ═══ API ═══
+async function callAI(messages,maxTokens=600,system=null){
   const body={model:'claude-sonnet-4-20250514',max_tokens:maxTokens,messages};
   if(system)body.system=system;
-  const url='https://runcoach-proxy.johandouma.workers.dev';
-  let r;
-  try{
-    r=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-api-key':profile.apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify(body)});
-  }catch(err){
-    throw new Error('Kan proxy niet bereiken: '+err.message);
-  }
-  if(!r.ok){
-    let msg=r.status;try{const j=await r.json();msg=j.error?.message||msg;}catch(e){}
-    throw new Error('API fout ('+msg+')');
-  }
+  const r=await fetch('https://runcoach-proxy.johandouma.workers.dev',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':P.apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify(body)});
+  if(!r.ok){const t=await r.json();throw new Error(t?.error?.message||r.status);}
   return(await r.json()).content[0].text;
 }
-
-document.getElementById('chat-input').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,100)+'px';});
-
-
-// ── SUPABASE SYNC ──
-const SB_URL = 'https://ftklgibsqjpmqzyvqyhd.supabase.co';
-const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZ0a2xnaWJzcWpwbXF6eXZxeWhkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc4OTA3OTEsImV4cCI6MjA5MzQ2Njc5MX0.bYn_5epzSpI-xZ3ndBqmID8Y_tzW4uxRaHD0EQNwVj4';
-const SB_TABLE = 'runcoach_data';
-
-function getUserId() {
-  let id = localStorage.getItem('rc_userid');
-  if (!id) {
-    id = 'user_' + Math.random().toString(36).substring(2, 12);
-    localStorage.setItem('rc_userid', id);
-  }
-  return id;
-}
-
-async function syncToCloud() {
-  const userId = getUserId();
-  const data = {
-    user_id: userId,
-    profile: JSON.parse(localStorage.getItem('rc_profile') || 'null'),
-    schema: JSON.parse(localStorage.getItem('rc_schema') || 'null'),
-    logs: JSON.parse(localStorage.getItem('rc_logs') || '{}'),
-    feelings: JSON.parse(localStorage.getItem('rc_feelings') || '{}'),
-    activities: JSON.parse(localStorage.getItem('rc_activities') || '[]'),
-    chat: JSON.parse(localStorage.getItem('rc_chat') || '[]'),
-    updated_at: new Date().toISOString()
-  };
-  try {
-    const r = await fetch(`${SB_URL}/rest/v1/${SB_TABLE}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SB_KEY,
-        'Authorization': `Bearer ${SB_KEY}`,
-        'Prefer': 'resolution=merge-duplicates,return=minimal'
-      },
-      body: JSON.stringify(data)
-    });
-    if(r.ok || r.status === 201 || r.status === 204) return true;
-    const err = await r.text();
-    console.warn('Supabase fout:', r.status, err);
-    return false;
-  } catch(e) {
-    console.warn('syncToCloud fout:', e.message);
-    return false;
-  }
-}
-
-
-async function syncFromCloud() {
-  const userId = getUserId();
-  try {
-    const r = await fetch(`${SB_URL}/rest/v1/${SB_TABLE}?user_id=eq.${userId}&select=*`, {
-      headers: { 'apikey': SB_KEY, 'Authorization': `Bearer ${SB_KEY}` }
-    });
-    if(!r.ok) {
-      const err = await r.text();
-      console.warn('Supabase fout:', r.status, err);
-      return false;
-    }
-    const rows = await r.json();
-    if (!rows || !rows.length) {
-      console.log('Geen data in cloud voor user:', userId);
-      return false;
-    }
-    const d = rows[0];
-    if (d.profile) localStorage.setItem('rc_profile', JSON.stringify(d.profile));
-    if (d.schema) localStorage.setItem('rc_schema', JSON.stringify(d.schema));
-    if (d.logs) localStorage.setItem('rc_logs', JSON.stringify(d.logs));
-    if (d.feelings) localStorage.setItem('rc_feelings', JSON.stringify(d.feelings));
-    if (d.activities) localStorage.setItem('rc_activities', JSON.stringify(d.activities));
-    if (d.chat) localStorage.setItem('rc_chat', JSON.stringify(d.chat));
-    return true;
-  } catch(e) {
-    console.warn('Sync van cloud mislukt:', e.message);
-    return false;
-  }
-}
-
-// Auto-sync to cloud after every save
-const _origSetItem = localStorage.setItem.bind(localStorage);
-localStorage.setItem = function(key, value) {
-  _origSetItem(key, value);
-  if (key.startsWith('rc_') && key !== 'rc_userid') {
-    clearTimeout(window._syncTimer);
-    window._syncTimer = setTimeout(syncToCloud, 2000);
-  }
-};
 
 init();
 </script>

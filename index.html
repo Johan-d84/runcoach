@@ -493,51 +493,68 @@ document.getElementById('generate-schema-btn').addEventListener('click',generate
 async function generateSchema(){
   const btn=document.getElementById('generate-schema-btn');
   btn.textContent='...';btn.disabled=true;
-  const p=`Maak een 8-weken trainingsschema. Geef ALLEEN JSON terug, geen tekst eromheen. Geen markdown. Geen aanhalingstekens in tekstvelden. Max 50 tekens per beschrijving of detail.
 
-[{"week":1,"focus":"Rustige opbouw","km_totaal":15,"dagen":[{"dag":"ma","type":"run","beschrijving":"Duurloop 4km","detail":"Zone 2 rustig tempo 30 min"},{"dag":"di","type":"rest","beschrijving":"Rust","detail":"Stretchen"},{"dag":"wo","type":"run","beschrijving":"Intervallen","detail":"4x400m met pauze"},{"dag":"do","type":"rest","beschrijving":"Rust","detail":"Rust"},{"dag":"vr","type":"${profile.cycling==='ja'?'bike':'rest'}","beschrijving":"${profile.cycling==='ja'?'Fietsen 45min':'Rust'}","detail":"${profile.cycling==='ja'?'Rustig fietsen':'Rust'}"},{"dag":"za","type":"run","beschrijving":"Lange duur 7km","detail":"Rustig uitlopen"},{"dag":"zo","type":"rest","beschrijving":"Rust","detail":"Rust"}]}]
+  // Simple prompt - NO detail field to avoid JSON parse errors
+  const sysprompt = "Je bent een loopcoach. Geef altijd alleen valide JSON terug. Geen uitleg, geen markdown, geen code blocks. Geen speciale tekens of aanhalingstekens binnen tekstwaarden.";
+  const userprompt = `Maak een 8-weken trainingsschema voor een ${profile.runLevel} loper met doel: ${profile.goal}. ${profile.cycling==='ja'?'Voeg fietstrainingen toe.':''} Exact ${profile.days} trainingsdagen per week.
 
-Geef alle 8 weken zo. Atleet: ${profile.runLevel}, doel: ${profile.goal}, ${profile.days} trainingsdagen per week.`;
+Geef ALLEEN deze JSON structuur terug:
+[{"week":1,"focus":"Opbouw","km":15,"dagen":[{"dag":"ma","type":"run","omschrijving":"Duurloop 5km"},{"dag":"di","type":"rest","omschrijving":"Rust"},{"dag":"wo","type":"run","omschrijving":"Intervallen"},{"dag":"do","type":"rest","omschrijving":"Rust"},{"dag":"vr","type":"run","omschrijving":"Tempo 4km"},{"dag":"za","type":"rest","omschrijving":"Rust"},{"dag":"zo","type":"rest","omschrijving":"Rust"}]}]
+
+Regels:
+- type is alleen: run, bike, rest, of cross
+- omschrijving is maximaal 30 tekens
+- geen aanhalingstekens in omschrijving
+- alle 8 weken, alle 7 dagen`;
+
   try{
-    const res=await callClaude([{role:'user',content:p}],2800);
-    // Extract JSON array robustly — find first '[' to last ']'
-    const start=res.indexOf('[');
-    const end=res.lastIndexOf(']');
-    if(start===-1||end===-1)throw new Error('Geen JSON array gevonden in antwoord.\n\nAntwoord was:\n'+res.substring(0,300));
-    const jsonStr=res.substring(start,end+1);
-    let schema_raw;
+    const res = await callClaude([{role:'user',content:userprompt}], 2000, sysprompt);
+    
+    // Extract JSON
+    const start = res.indexOf('[');
+    const end = res.lastIndexOf(']');
+    if(start === -1 || end === -1) throw new Error('Geen JSON gevonden. Probeer opnieuw.');
+    
+    let jsonStr = res.substring(start, end+1);
+    
+    // Clean up common issues
+    jsonStr = jsonStr
+      .replace(/,(\s*[}\]])/g, '$1')  // trailing commas
+      .replace(/[‘’]/g, "'") // smart quotes
+      .replace(/[“”]/g, '"') // smart double quotes
+      .replace(/	/g, ' ');            // tabs
+
+    let raw;
     try {
-      schema_raw=JSON.parse(jsonStr);
-    } catch(parseErr) {
-      // Try fixing common issues: remove trailing commas, fix apostrophes
-      const fixed=jsonStr
-        .replace(/,\s*([}\]])/g,'$1')
-        .replace(/'/g,"'");
-      try { schema_raw=JSON.parse(fixed); }
-      catch(e2) { throw new Error('Schema kon niet worden gelezen. Probeer opnieuw.'); }
+      raw = JSON.parse(jsonStr);
+    } catch(e) {
+      throw new Error('Schema kon niet worden verwerkt. Probeer opnieuw.');
     }
-    schema=schema_raw;
-    if(!Array.isArray(schema)||schema.length===0)throw new Error('Schema is leeg of geen array.');
-    // Ensure each week has required fields
-    schema=schema.map((wk,i)=>({
-      week:wk.week||i+1,
-      focus:wk.focus||`Week ${i+1}`,
-      km_totaal:Number(wk.km_totaal)||0,
-      dagen:Array.isArray(wk.dagen)?wk.dagen.map(d=>({
-        dag:d.dag||'?',
-        type:d.type||'rest',
-        beschrijving:d.beschrijving||d.type||'',
-        detail:d.detail||''
-      })):[]
+
+    if(!Array.isArray(raw) || raw.length === 0) throw new Error('Ongeldig schema ontvangen.');
+
+    // Normalize to consistent structure
+    schema = raw.map((wk, i) => ({
+      week: i + 1,
+      focus: String(wk.focus || wk.doel || `Week ${i+1}`).substring(0, 60),
+      km_totaal: Number(wk.km || wk.km_totaal || 0),
+      dagen: (wk.dagen || []).map(d => ({
+        dag: String(d.dag || '?').substring(0, 2),
+        type: ['run','bike','rest','cross'].includes(d.type) ? d.type : 'rest',
+        beschrijving: String(d.omschrijving || d.beschrijving || d.type || '').substring(0, 50),
+        detail: ''
+      }))
     }));
-    localStorage.setItem('rc_schema',JSON.stringify(schema));
-    renderSchema();renderToday();
-  }catch(e){
-    console.error('Schema fout:',e);
-    alert('Fout bij genereren schema:\n\n'+e.message+'\n\nProbeer opnieuw. Als het blijft falen, controleer je API key.');
+
+    localStorage.setItem('rc_schema', JSON.stringify(schema));
+    renderSchema();
+    renderToday();
+  } catch(e) {
+    alert('Fout: ' + e.message);
   }
   btn.textContent='⟳ Genereer';btn.disabled=false;
 }
+
 
 function renderSchema(){
   document.getElementById('week-label').textContent=`Week ${currentWeek} van ${WEEKS}`;

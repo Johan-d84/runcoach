@@ -1075,39 +1075,26 @@ async function syncToCloud() {
     updated_at: new Date().toISOString()
   };
   try {
-    const r = await fetch(`${SB_URL}/rest/v1/${SB_TABLE}?user_id=eq.${userId}`, {
-      method: 'PATCH',
+    const r = await fetch(`${SB_URL}/rest/v1/${SB_TABLE}`, {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'apikey': SB_KEY,
         'Authorization': `Bearer ${SB_KEY}`,
-        'Prefer': 'return=minimal'
+        'Prefer': 'resolution=merge-duplicates,return=minimal'
       },
       body: JSON.stringify(data)
     });
-    // If no row exists yet, insert it
-    if(r.status === 404 || (await r.clone().text()) === '') {
-      await fetch(`${SB_URL}/rest/v1/${SB_TABLE}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'apikey': SB_KEY,
-          'Authorization': `Bearer ${SB_KEY}`,
-        },
-        body: JSON.stringify(data)
-      });
-    }
-    if(!r.ok) {
-      const err = await r.text();
-      console.warn('Supabase upload fout:', r.status, err);
-      return false;
-    }
-    return true;
+    if(r.ok || r.status === 201 || r.status === 204) return true;
+    const err = await r.text();
+    console.warn('Supabase fout:', r.status, err);
+    return false;
   } catch(e) {
-    console.warn('Sync naar cloud mislukt:', e.message);
+    console.warn('syncToCloud fout:', e.message);
     return false;
   }
 }
+
 
 async function syncFromCloud() {
   const userId = getUserId();

@@ -211,20 +211,20 @@ textarea{overflow:hidden}
   <div id="page-today" class="page active">
     <div id="today-hero-wrap"></div>
     <div class="section-hdr">Week voortgang</div>
-    <div class="stats-row">
+    <div class="stats-row" style="grid-template-columns:1fr 1fr">
       <div class="stat-box"><div class="stat-val" id="stat-km">—</div><div class="stat-lbl">km gepland</div></div>
-      <div class="stat-box"><div class="stat-val" id="stat-done">0/0</div><div class="stat-lbl">sessies</div></div>
-      <div class="stat-box"><div class="stat-val" id="stat-streak">0</div><div class="stat-lbl">streak 🔥</div></div>
+      <div class="stat-box"><div class="stat-val" id="stat-done">0/0</div><div class="stat-lbl">sessies voltooid</div></div>
     </div>
-    <div class="prog-bar"><div class="prog-fill" id="week-prog" style="width:0%"></div></div>
-    <div class="section-hdr">Hoe voel je je?</div>
-    <div class="recovery-row">
-      <button class="rec-btn" data-feel="great" onclick="logFeeling('great',this)"><span class="rec-icon">💪</span>Top</button>
-      <button class="rec-btn" data-feel="ok" onclick="logFeeling('ok',this)"><span class="rec-icon">😊</span>Goed</button>
-      <button class="rec-btn" data-feel="tired" onclick="logFeeling('tired',this)"><span class="rec-icon">😴</span>Moe</button>
-      <button class="rec-btn" data-feel="bad" onclick="logFeeling('bad',this)"><span class="rec-icon">🤕</span>Ziek</button>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <span style="font-size:11px;color:var(--muted);white-space:nowrap">Gevoel:</span>
+      <div style="display:flex;gap:5px;flex:1">
+        <button class="rec-btn" data-feel="great" onclick="logFeeling('great',this)" style="padding:6px 4px;font-size:10px"><span class="rec-icon" style="font-size:14px;margin-bottom:1px">💪</span>Top</button>
+        <button class="rec-btn" data-feel="ok" onclick="logFeeling('ok',this)" style="padding:6px 4px;font-size:10px"><span class="rec-icon" style="font-size:14px;margin-bottom:1px">😊</span>Goed</button>
+        <button class="rec-btn" data-feel="tired" onclick="logFeeling('tired',this)" style="padding:6px 4px;font-size:10px"><span class="rec-icon" style="font-size:14px;margin-bottom:1px">😴</span>Moe</button>
+        <button class="rec-btn" data-feel="bad" onclick="logFeeling('bad',this)" style="padding:6px 4px;font-size:10px"><span class="rec-icon" style="font-size:14px;margin-bottom:1px">🤕</span>Ziek</button>
+      </div>
     </div>
-    <div class="section-hdr">Week <span id="week-nr-today">1</span> — alle trainingen</div>
+    <div class="section-hdr">Week <span id="week-nr-today">1</span> — trainingen</div>
     <div class="card" style="padding:0 14px"><div id="today-week-list" style="padding:2px 0"></div></div>
   </div>
 
@@ -387,9 +387,15 @@ textarea{overflow:hidden}
     <button class="nav-item active" data-page="today"><span class="nav-icon">🏠</span>Vandaag</button>
     <button class="nav-item" data-page="schema"><span class="nav-icon">📅</span>Schema</button>
     <button class="nav-item" data-page="coach"><span class="nav-icon">💬</span>Coach</button>
-    <button class="nav-item" data-page="food"><span class="nav-icon">🥗</span>Voeding</button>
-    <button class="nav-item" data-page="profile"><span class="nav-icon">👤</span>Profiel</button>
+    <button class="nav-item" data-page="activities"><span class="nav-icon">📂</span>Data</button>
+    <button class="nav-item" id="meer-nav-btn"><span class="nav-icon">⋯</span>Meer</button>
   </nav>
+  <div id="meer-menu" style="display:none;position:fixed;bottom:58px;left:0;right:0;max-width:430px;margin:0 auto;background:var(--bg);border-top:1px solid var(--border);padding:16px;z-index:150">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <button onclick="goMeer('food')" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;color:var(--text);font-size:13px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px"><span style="font-size:26px">🥗</span>Voeding</button>
+      <button onclick="goMeer('profile')" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;color:var(--text);font-size:13px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px"><span style="font-size:26px">👤</span>Profiel</button>
+    </div>
+  </div>
 </div>
 
 <div class="modal-overlay" id="log-modal">
@@ -695,7 +701,20 @@ document.getElementById('start-btn').addEventListener('click',async()=>{
   autoGreet();
 });
 
+document.getElementById('meer-nav-btn')?.addEventListener('click',()=>{
+  const menu=document.getElementById('meer-menu');
+  menu.style.display=menu.style.display==='none'?'block':'none';
+});
+document.addEventListener('click',e=>{
+  const menu=document.getElementById('meer-menu');
+  if(menu&&menu.style.display!=='none'&&!menu.contains(e.target)&&!document.getElementById('meer-nav-btn')?.contains(e.target)){
+    menu.style.display='none';
+  }
+});
+
 document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>{
+  if(!b.dataset.page)return;
+  document.getElementById('meer-menu').style.display='none';
   document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));
   b.classList.add('active');
@@ -718,9 +737,18 @@ document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=
 }));
 
 function switchTo(page){
+  document.getElementById('meer-menu').style.display='none';
   document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelector(`[data-page="${page}"]`)?.classList.add('active');
+  document.getElementById('page-'+page)?.classList.add('active');
+}
+
+function goMeer(page){
+  document.getElementById('meer-menu').style.display='none';
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('meer-nav-btn')?.classList.add('active');
   document.getElementById('page-'+page)?.classList.add('active');
 }
 
@@ -765,7 +793,7 @@ function renderToday(){
       const isT=d.dag===tc;
       const tc2=isDone?'dot-done':`dot-${d.type}`;
       const tg=isDone?'tag-done':`tag-${d.type}`;
-      return `<div class="day-row" style="${isT?'background:rgba(200,240,96,.04);margin:0 -14px;padding:10px 14px':''}">
+      return `<div class="day-row" style="${isT?'background:rgba(200,240,96,.04);margin:0 -14px;padding:10px 14px':''}${d.type==='rest'&&!isT?'opacity:.45':''}" >
         <div class="day-dot ${tc2}"></div>
         <div class="day-info">
           <div class="day-name">${d.dag}${isT?' <span style="font-size:10px;color:var(--accent3)">← vandaag</span>':''} <span class="tag ${tg}">${isDone?'✓':d.type}</span></div>

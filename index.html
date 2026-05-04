@@ -164,7 +164,17 @@ textarea{overflow:hidden}
 </head>
 <body>
 
-<div id="setup-screen">
+<div id="login-screen" style="min-height:100vh;display:flex;flex-direction:column;padding:40px 24px;background:var(--bg)">
+  <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:30px;color:var(--accent);margin-bottom:4px">RunCoach</div>
+  <div style="font-size:14px;color:var(--muted);margin-bottom:32px;line-height:1.5">Selecteer je profiel of maak een nieuw aan</div>
+
+  <div id="profiles-list" style="margin-bottom:20px"></div>
+
+  <button class="start-btn" id="new-profile-btn" style="background:transparent;border:1px solid var(--accent);color:var(--accent);margin-top:0">+ Nieuw profiel aanmaken</button>
+  <div id="login-status" style="font-size:12px;color:var(--muted);text-align:center;margin-top:12px"></div>
+</div>
+
+<div id="setup-screen" style="display:none">
   <div class="setup-logo">RunCoach</div>
   <div class="setup-sub">Jouw persoonlijke hardloop- en fietscoach — gebouwd op AI</div>
   <div class="api-note">🔑 Vereist een <strong>Anthropic API key</strong> via <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>. Alles blijft lokaal in je browser.</div>
@@ -180,6 +190,7 @@ textarea{overflow:hidden}
   <button class="start-btn" id="start-btn">Start met trainen →</button>
 </div>
 
+</div>
 <div id="app">
   <div class="topbar">
     <div class="topbar-logo">RunCoach</div>
@@ -353,7 +364,10 @@ textarea{overflow:hidden}
         <button class="day-btn" id="save-userid-btn" style="width:100%;text-align:center;padding:8px">ID opslaan en synchroniseren</button>
       </div>
     </div>
-    <div style="margin-top:12px;text-align:center"><button class="day-btn" id="reset-btn" style="color:var(--danger);border-color:var(--danger)">App resetten</button></div>
+    <div style="margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+      <button class="day-btn" id="switch-profile-btn" style="border-color:var(--accent3);color:var(--accent3)">↩ Wissel profiel</button>
+      <button class="day-btn" id="reset-btn" style="color:var(--danger);border-color:var(--danger)">App resetten</button>
+    </div>
   </div>
 
   <nav class="bottom-nav">
@@ -398,19 +412,82 @@ let importedActivities=[],stravaToken=null,charts={};
 const WEEKS=8,DAYS=['ma','di','wo','do','vr','za','zo'];
 
 async function init(){
-  // Laad data uit cloud als die er is
-  await syncFromCloud();
+  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  checkStravaCallback();
+  // Show login screen
+  await showLoginScreen();
+}
 
-  const s=localStorage.getItem('rc_profile');if(!s)return;
+async function showLoginScreen(){
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-screen').style.flexDirection='column';
+  document.getElementById('setup-screen').style.display='none';
+  document.getElementById('app').style.display='none';
+
+  const statusEl=document.getElementById('login-status');
+  statusEl.textContent='Profielen laden...';
+
+  // Load all profiles from Supabase
+  let profiles=[];
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/${SB_TABLE}?select=user_id,profile,updated_at&order=updated_at.desc`,{
+      headers:{'apikey':SB_KEY,'Authorization':`Bearer ${SB_KEY}`}
+    });
+    if(r.ok){
+      const rows=await r.json();
+      profiles=rows.filter(row=>row.profile&&row.profile.name);
+    }
+    statusEl.textContent='';
+  }catch(e){
+    statusEl.textContent='Kon profielen niet laden — check je verbinding';
+  }
+
+  const list=document.getElementById('profiles-list');
+  if(profiles.length===0){
+    list.innerHTML=`<div style="font-size:13px;color:var(--muted);text-align:center;padding:20px 0">Nog geen profielen gevonden.<br>Maak hieronder een nieuw profiel aan.</div>`;
+  } else {
+    list.innerHTML=profiles.map(row=>{
+      const p=row.profile;
+      const date=new Date(row.updated_at).toLocaleDateString('nl-NL');
+      return `<div onclick="loadProfile('${row.user_id}')" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:10px;cursor:pointer;display:flex;align-items:center;gap:12px;transition:border-color .15s" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+        <div style="width:40px;height:40px;border-radius:50%;background:rgba(200,240,96,.15);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🏃</div>
+        <div style="flex:1">
+          <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:15px;margin-bottom:2px">${p.name}</div>
+          <div style="font-size:11px;color:var(--muted)">${p.goal||''} · ${p.runLevel||''} · laatst actief ${date}</div>
+        </div>
+        <div style="color:var(--accent);font-size:18px">›</div>
+      </div>`;
+    }).join('');
+  }
+}
+
+async function loadProfile(userId){
+  const statusEl=document.getElementById('login-status');
+  statusEl.textContent='Profiel laden...';
+  localStorage.setItem('rc_userid',userId);
+  const ok=await syncFromCloud();
+  if(!ok){statusEl.textContent='Kon profiel niet laden';return;}
+  const s=localStorage.getItem('rc_profile');
+  if(!s){statusEl.textContent='Geen profieldata gevonden';return;}
   profile=JSON.parse(s);
   schema=JSON.parse(localStorage.getItem('rc_schema')||'null');
   chatHistory=JSON.parse(localStorage.getItem('rc_chat')||'[]');
   importedActivities=JSON.parse(localStorage.getItem('rc_activities')||'[]');
-  stravaToken=JSON.parse(localStorage.getItem('rc_strava')||'null');
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('app').style.display='block';
+  updateTopbar();renderProfile();renderToday();renderSchema();renderActivitiesList();updateStreakBadge();
+}
+
+function startApp(){
+  profile=JSON.parse(localStorage.getItem('rc_profile')||'null');
+  if(!profile)return;
+  schema=JSON.parse(localStorage.getItem('rc_schema')||'null');
+  chatHistory=JSON.parse(localStorage.getItem('rc_chat')||'[]');
+  importedActivities=JSON.parse(localStorage.getItem('rc_activities')||'[]');
+  document.getElementById('login-screen').style.display='none';
   document.getElementById('setup-screen').style.display='none';
   document.getElementById('app').style.display='block';
-  updateTopbar();renderProfile();renderToday();renderSchema();renderActivitiesList();updateStravaUI();checkStravaCallback();updateStreakBadge();
-  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  updateTopbar();renderProfile();renderToday();renderSchema();renderActivitiesList();updateStreakBadge();
 }
 
 function updateTopbar(){
@@ -423,17 +500,26 @@ document.querySelectorAll('.opt-btn').forEach(b=>b.addEventListener('click',()=>
   b.classList.add('active');
 }));
 
-document.getElementById('start-btn').addEventListener('click',()=>{
+document.getElementById('new-profile-btn').addEventListener('click',()=>{
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('setup-screen').style.display='flex';
+  document.getElementById('setup-screen').style.flexDirection='column';
+});
+
+document.getElementById('start-btn').addEventListener('click',async()=>{
   const k=document.getElementById('setup-api').value.trim();
   if(!k){alert('Voer je API key in');return;}
+  // New profile = new user ID
+  const newId='user_'+Math.random().toString(36).substring(2,12);
+  localStorage.setItem('rc_userid',newId);
   const _age=parseInt(document.getElementById('setup-age')?.value)||30;
   const _mhr=parseInt(document.getElementById('setup-mhr')?.value)||(220-_age);
   profile={apiKey:k,name:document.getElementById('setup-name').value.trim()||'Atleet',runLevel:document.querySelector('[data-group="run-level"].active')?.dataset.val||'beginner',goal:document.querySelector('[data-group="goal"].active')?.dataset.val||'5km opbouwen',cycling:document.querySelector('[data-group="cycling"].active')?.dataset.val||'ja',days:parseInt(document.querySelector('[data-group="days"].active')?.dataset.val||'4'),weight:document.getElementById('setup-weight').value||'75',height:document.getElementById('setup-height').value||'175',age:_age,mhr:_mhr,startDate:new Date().toISOString()};
   localStorage.setItem('rc_profile',JSON.stringify(profile));
+  await syncToCloud();
   document.getElementById('setup-screen').style.display='none';
   document.getElementById('app').style.display='block';
   updateTopbar();renderProfile();renderToday();
-  if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
   autoGreet();
 });
 
@@ -1114,6 +1200,10 @@ document.getElementById('save-userid-btn')?.addEventListener('click',async()=>{
   // Sync with new ID
   const btn=document.getElementById('sync-now-btn');
   btn.click();
+});
+document.getElementById('switch-profile-btn')?.addEventListener('click',()=>{
+  localStorage.removeItem('rc_userid');
+  showLoginScreen();
 });
 document.getElementById('reset-btn').addEventListener('click',()=>{if(confirm('Alle data wissen?')){localStorage.clear();location.reload();}});
 

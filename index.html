@@ -766,7 +766,7 @@ document.getElementById('gen-btn').addEventListener('click',()=>{
   document.getElementById('gen-days').value=P.days||4;
   document.getElementById('gen-weeks').value=P.weeks||12;
   document.getElementById('gen-dist').value=P.currentDist||10;
-  document.getElementById('gen-cyc').checked=P.cycling==='ja';
+  if(document.getElementById('gen-cyc'))document.getElementById('gen-cyc').checked=P.cycling==='ja';
   document.getElementById('gen-mo').classList.add('open');
 });
 

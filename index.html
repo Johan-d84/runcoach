@@ -1098,11 +1098,11 @@ document.getElementById('extra-sub').addEventListener('click',async()=>{
 // ═══ CHAT ═══
 function renderChat(){
   const a=document.getElementById('chatw');
-  a.innerHTML=chat.map(m=>`<div class="bbl bbl-${m.r==='u'?'u':'ai'}">${m.c.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>`).join('');
+  a.innerHTML=chat.filter(m=>m&&m.c!=null).map(m=>`<div class="bbl bbl-${m.r==='u'?'u':'ai'}">${String(m.c||'').replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>')}</div>`).join('');
   a.scrollTop=a.scrollHeight;
 }
 function addB(role,text){
-  chat.push({r:role==='user'?'u':'ai',c:text});
+  chat.push({r:role==='user'?'u':'ai',c:String(text||'')});
   if(chat.length>50)chat.splice(0,2);
   localStorage.setItem('rc_chat',JSON.stringify(chat));
   renderChat();

@@ -221,10 +221,7 @@ textarea{overflow:hidden}
     <button class="ob" data-g="dist" data-v="21">~21km</button>
     <button class="ob" data-g="dist" data-v="30">30+km</button>
   </div></div>
-  <div class="ssec"><label class="slbl">Fietsen meenemen?</label><div class="sopts">
-    <button class="ob active" data-g="cyc" data-v="ja">Ja</button>
-    <button class="ob" data-g="cyc" data-v="nee">Nee</button>
-  </div></div>
+
   <div class="ssec"><label class="slbl">Trainingsdagen/week</label><div class="sopts t3">
     <button class="ob" data-g="days" data-v="3">3×</button>
     <button class="ob active" data-g="days" data-v="4">4×</button>
@@ -276,7 +273,10 @@ textarea{overflow:hidden}
           <button class="fb" data-f="bad" onclick="logFeel('bad',this)"><span class="fi">🤕</span>Ziek</button>
         </div>
       </div>
-      <div class="shdr">Week <span id="wk-nr">1</span> — trainingen</div>
+      <div class="shdr" style="display:flex;align-items:center;justify-content:space-between">
+        <span>Week <span id="wk-nr">1</span> — trainingen</span>
+        <button class="db" onclick="openExtraLog()" style="border-color:var(--a);color:var(--a);font-size:10px">+ Extra training</button>
+      </div>
       <div class="card" style="padding:0 13px"><div id="day-list"></div></div>
     </div>
 
@@ -408,6 +408,26 @@ textarea{overflow:hidden}
 </div>
 
 <!-- MODALS -->
+<div class="mo" id="extra-mo">
+  <div class="md">
+    <div class="mdtitle">Extra training loggen <button class="mclose" onclick="closeM('extra-mo')">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:12px">
+      <div><label class="slbl" style="margin-bottom:5px">Type training</label>
+        <select id="extra-type" class="sinput" style="padding:9px 12px">
+          <option value="run">Hardlopen</option>
+          <option value="rest">Wandelen</option>
+        </select>
+      </div>
+      <div><label class="slbl" style="margin-bottom:5px">Omschrijving</label>
+        <input class="sinput" type="text" id="extra-desc" placeholder="Bijv: Extra loopje 5km">
+      </div>
+    </div>
+    <textarea class="mdinput" id="extra-notes" placeholder="Details: afstand, tijd, gevoel..."></textarea>
+    <button class="mdbtn" id="extra-sub">Opslaan + AI feedback</button>
+    <button class="mdbtn-o" onclick="closeM('extra-mo')">Annuleren</button>
+  </div>
+</div>
+
 <div class="mo" id="log-mo">
   <div class="md">
     <div class="mdtitle">Training loggen <button class="mclose" onclick="closeM('log-mo')">✕</button></div>
@@ -456,10 +476,7 @@ textarea{overflow:hidden}
         <div style="flex:1"><label class="slbl">Trainingsdagen/week</label><input type="number" id="gen-days" min="2" max="6" class="sinput" style="padding:9px 12px"></div>
         <div style="flex:1"><label class="slbl">Aantal weken</label><input type="number" id="gen-weeks" min="4" max="24" class="sinput" style="padding:9px 12px"></div>
       </div>
-      <div style="display:flex;align-items:center;gap:10px">
-        <input type="checkbox" id="gen-cyc" style="width:18px;height:18px;accent-color:var(--a)">
-        <label for="gen-cyc" style="font-size:13px">Fietsen meenemen</label>
-      </div>
+
     </div>
     <button class="mdbtn" id="gen-confirm" style="margin-top:16px">Schema genereren →</button>
   </div>
@@ -718,6 +735,16 @@ function renderToday(){
       </div>`;
     }).join('');
   }
+
+  // Show extra trainings today
+  const extras=(logs[`w${CW}`]?.extras||[]).filter(e=>e.dag===tc);
+  if(extras.length){
+    const extraHTML=extras.map(e=>`<div class="dr" style="border-top:1px solid var(--bd)">
+      <div class="dot dot-done"></div>
+      <div class="di"><div class="dn">Extra <span class="tag tag-run">${e.type}</span></div><div class="dd">${e.desc}</div></div>
+    </div>`).join('');
+    document.getElementById('day-list').innerHTML+=extraHTML;
+  }
 }
 
 function esc(s){return(s||'').replace(/'/g,"\\'").replace(/\n/g,' ').substring(0,150);}
@@ -763,18 +790,85 @@ async function generateSchema(){
   const tw=P.weeks||12;
   const sys='Je bent loopcoach. Geef uitsluitend valide JSON terug voor 1 week. Geen markdown, geen uitleg. In tekstwaarden: geen apostrofs, geen aanhalingstekens. Schrijf min/km als min-km.';
   schema=[];
-  let kmBase=cd*1.2;
+  // Wetenschappelijk opbouwschema
+  // Week 1 start op huidige conditie, bouw 10% op per week, elke 4e week herstel (-30%)
+  // Langste duurloop loopt op naar 30-35km (marathon) of doelafstand
+  const goalDistances = {
+    '5km opbouwen': 5, '10km lopen': 10,
+    'halve marathon': 21, 'marathon': 42, 'fitter worden': 15
+  };
+  const goalDist = goalDistances[P.goal] || 21;
+  
+  // Bereken weekvolumes: start op cd*1.5, bouw op tot peak ~6 weken voor einde
+  const peakWeek = Math.max(1, tw - 5);
+  const peakKm = Math.min(goalDist === 42 ? 65 : goalDist * 3.5, cd * 4);
+  
+  // Langste duurloop per week: start op cd, op naar 80% van doelafstand
+  const maxLong = goalDist === 42 ? 32 : Math.round(goalDist * 0.9);
+  
   for(let w=1;w<=tw;w++){
     btn.textContent=`Week ${w}/${tw}...`;
-    const isRec=w%4===0;
-    const km=Math.round(isRec?kmBase*.7:kmBase);
-    if(!isRec)kmBase*=1.08;
-    const prompt=`Week ${w} van ${tw}. Doel: ${P.goal}. Huidige conditie: ${cd}km. Max hartslag: ${mhr} spm. Zone2: ${Math.round(mhr*.6)}-${Math.round(mhr*.7)} spm. Zone3: ${Math.round(mhr*.7)}-${Math.round(mhr*.8)} spm.${isRec?' Herstelweek: lichter volume.':''} Totaal ca ${km}km. ${P.cycling==='ja'?'1 fietssessie.':''} Precies ${P.days} trainingsdagen, rest rustdagen.
+    const isRec = w % 4 === 0;
+    const isTaper = w > tw - 3 && goalDist >= 21;
+    
+    // Wekelijks volume
+    let km;
+    if(isTaper) {
+      const taperIdx = w - (tw - 2);
+      km = Math.round(peakKm * [0.7, 0.5, 0.3][taperIdx - 1] || peakKm * 0.3);
+    } else if(isRec) {
+      km = Math.round(cd * 1.5 + (peakKm - cd * 1.5) * ((w-1)/peakWeek) * 0.7);
+    } else {
+      km = Math.round(cd * 1.5 + (peakKm - cd * 1.5) * (Math.min(w-1, peakWeek)/peakWeek));
+    }
+    km = Math.max(cd, km);
+    
+    // Langste duurloop van de week
+    const longRunProgress = Math.min((w-1) / (peakWeek - 1), 1);
+    let longRun = Math.round(cd + (maxLong - cd) * longRunProgress);
+    if(isRec) longRun = Math.round(longRun * 0.7);
+    if(isTaper) longRun = Math.round(maxLong * (w === tw ? 0.3 : w === tw-1 ? 0.5 : 0.7));
+    longRun = Math.max(cd, Math.min(longRun, maxLong));
+    
+    // Tempo voor zone 2 (60-70% MHR) in min/km
+    const z2hr = Math.round(mhr * 0.65);
+    const z3hr = Math.round(mhr * 0.75);
+    const z4hr = Math.round(mhr * 0.85);
+    // Schat tempo op basis van hartslag (globale benadering)
+    const easyPace = `${5 + Math.round((180 - mhr) * 0.05)}-${6 + Math.round((180 - mhr) * 0.05)}`;
+    const tempoPace = `${4 + Math.round((180 - mhr) * 0.03)}-${5 + Math.round((180 - mhr) * 0.03)}`;
+    
+    const weekType = isTaper ? 'tapering (volume afbouwen voor wedstrijd)' :
+                    isRec ? 'herstelweek (minder volume, zelfde intensiteit)' :
+                    w <= 3 ? 'basisopbouw (aerobe basis leggen)' :
+                    w <= tw/2 ? 'opbouwfase (volume en duur verhogen)' :
+                    'specifieke voorbereiding (marathonspecifieke training)';
+    
+    const prompt = `Je bent een professionele loopcoach. Maak een trainingsweek voor week ${w} van ${tw} richting een ${P.goal}.
 
-JSON voor 1 week:
-{"week":${w},"focus":"beschrijving","km":${km},"dagen":[{"dag":"ma","type":"run","omschrijving":"Duurloop 5km","wu":"5 min wandelen","hw":"5km zone2 tempo 6-30 min-km hartslag ${Math.round(mhr*.65)} spm","cd":"5 min wandelen stretchen"},{"dag":"di","type":"rest","omschrijving":"Rust","wu":"","hw":"Rust of wandelen","cd":""}]}
+ATLEET: Huidige conditie ${cd}km, max hartslag ${mhr} spm
+WEEKTYPE: ${weekType}
+VOLUME: Totaal ca ${km}km hardlopen
+LANGSTE DUURLOOP: ${longRun}km
+TRAININGSDAGEN: Precies ${P.days} trainingsdagen, rest is rustdag
+HARTSLAGZONES: Zone1=${Math.round(mhr*.5)}-${Math.round(mhr*.6)}, Zone2=${Math.round(mhr*.6)}-${Math.round(mhr*.7)}, Zone3=${Math.round(mhr*.7)}-${Math.round(mhr*.8)}, Zone4=${Math.round(mhr*.8)}-${Math.round(mhr*.9)}
 
-Regels: type=run/bike/rest. omschrijving max 35 tekens. wu=warming up. hw=hoofdwerk met tempo en hartslag. cd=cooling down. Geen apostrofs. Alle 7 dagen.`;
+TRAININGSTYPES voor deze week (kies passend bij weektype):
+- Duurloop zone2: rustig, bouwen aan aerobe basis
+- Intervaltraining: 400m-1000m herhalingen in zone4
+- Tempoduurloop: 20-40min in zone3, nabij marathontempo
+- Lange duurloop: ${longRun}km in zone2 (verplicht op zaterdag of zondag)
+- Herstelloop: korte rustige loop in zone1-2
+
+Geef UITSLUITEND dit JSON formaat, geen andere tekst:
+{"week":${w},"focus":"${weekType.split('(')[0].trim()}","km":${km},"dagen":[{"dag":"ma","type":"run","omschrijving":"Duurloop 8km zone2","wu":"10 min rustig inlopen","hw":"8km in zone2, ${z2hr} spm, tempo ${easyPace} min-km","cd":"10 min uitlopen en stretchen"},{"dag":"di","type":"rest","omschrijving":"Rust","wu":"","hw":"Volledige rust, foam roller","cd":""},...alle 7 dagen met type run of rest]}
+
+Regels:
+- Geen apostrofs of aanhalingstekens in tekst
+- omschrijving max 35 tekens
+- Verspreid de ${P.days} trainingsdagen logisch (niet 2 zware dagen na elkaar)
+- Lange duurloop op za of zo
+- Alle 7 dagen invullen`;
     try{
       const res=await callAI([{role:'user',content:prompt}],700,sys);
       const si=res.indexOf('{'),ei=res.lastIndexOf('}');
@@ -786,9 +880,9 @@ Regels: type=run/bike/rest. omschrijving max 35 tekens. wu=warming up. hw=hoofdw
         .replace(/\t/g,' ')
         .replace(/([a-zA-Z])'([a-zA-Z])/g,'$1$2');
       const raw=JSON.parse(js);
-      schema.push({week:w,focus:String(raw.focus||`Week ${w}`).replace(/['"]/g,'').substring(0,60),km_totaal:Number(raw.km||raw.km_totaal||km),dagen:(raw.dagen||[]).map(d=>({dag:String(d.dag||'?').substring(0,2),type:['run','bike','rest'].includes(d.type)?d.type:'rest',beschrijving:String(d.omschrijving||d.beschrijving||d.type||'').replace(/['"]/g,'').substring(0,50),detail:buildDet(d)}))});
+      schema.push({week:w,focus:(raw.focus||('Week '+w)).toString().replace(/[^a-zA-Z0-9 ]/g,'').substring(0,60),km_totaal:Number(raw.km||raw.km_totaal||km),dagen:(raw.dagen||[]).map(function(d){return{dag:String(d.dag||'?').substring(0,2),type:['run','rest'].includes(d.type)?d.type:'rest',beschrijving:String(d.omschrijving||d.beschrijving||d.type||'').replace(/[^a-zA-Z0-9 ]/g,'').substring(0,50),detail:buildDet(d)};})});
     }catch(e){
-      schema.push({week:w,focus:`Week ${w}`,km_totaal:km,dagen:DAYS.map(dag=>({dag,type:'rest',beschrijving:'Rust',detail:''}))});
+      schema.push({week:w,focus:'Week '+w,km_totaal:km,dagen:DAYS.map(function(dag){return{dag:dag,type:'rest',beschrijving:'Rust',detail:''};})});
     }
   }
   localStorage.setItem('rc_schema',JSON.stringify(schema));
@@ -971,6 +1065,36 @@ document.getElementById('log-sub').addEventListener('click',async()=>{
 
 function closeM(id){document.getElementById(id).classList.remove('open');}
 
+function openExtraLog(){
+  document.getElementById('extra-desc').value='';
+  document.getElementById('extra-notes').value='';
+  document.getElementById('extra-mo').classList.add('open');
+}
+
+document.getElementById('extra-sub').addEventListener('click',async()=>{
+  const type=document.getElementById('extra-type').value;
+  const desc=document.getElementById('extra-desc').value.trim()||'Extra training';
+  const notes=document.getElementById('extra-notes').value.trim();
+  closeM('extra-mo');
+  
+  // Save as extra log entry for today
+  const tc=tdc();
+  const logs=JSON.parse(localStorage.getItem('rc_logs')||'{}');
+  const k=`w${CW}`;if(!logs[k])logs[k]={};
+  // Use special key for extra trainings
+  const extraKey=`extra_${Date.now()}`;
+  if(!logs[k].extras)logs[k].extras=[];
+  logs[k].extras.push({dag:tc,type,desc,notes,ts:Date.now()});
+  localStorage.setItem('rc_logs',JSON.stringify(logs));
+  renderToday();
+  
+  if(notes){
+    goTo('coach');
+    addB('user',`Extra training gedaan vandaag: ${desc}. ${notes}`);
+    await askCoach(`Atleet deed een extra training (${type}): ${desc}. Details: ${notes}. Geef kort positieve feedback en 1 hersteltip.`);
+  }
+});
+
 // ═══ CHAT ═══
 function renderChat(){
   const a=document.getElementById('chatw');
@@ -998,12 +1122,14 @@ async function askCoach(msg){
   const sys=`Je bent RunCoach, coach voor ${P.name}. Profiel: doel=${P.goal}, gewicht=${P.weight}kg, max hartslag=${P.mhr||180} spm, fietsen=${P.cycling}. Status: week ${CW}/${WEEKS}, ${dc}/${td.length} sessies, gevoel=${feel}. Weekfocus: ${wk?.focus||'?'}. ${ra?'Recente activiteiten: '+ra+'.':''} Wees motiverend en concreet. Max 4 zinnen. Spreek ${P.name} aan.`;
   const msgs=[...chat.slice(-12).map(m=>({role:m.r==='u'?'user':'assistant',content:m.c})),{role:'user',content:msg}];
   try{const r=await callAI(msgs,500,sys);hideT();addB('ai',r);}
-  catch(e){hideT();addB('ai','Sorry, er ging iets mis.');}
+  catch(e){hideT();addB('ai','Fout: '+e.message+' — Controleer je API key in Profiel.');console.error('Coach fout:',e);}
 }
 
 document.getElementById('csend').addEventListener('click',sendChat);
 document.getElementById('cin').addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}});
-document.getElementById('cin').addEventListener('input',function(){this.style.height='auto';this.style.height=Math.min(this.scrollHeight,90)+'px';});
+document.getElementById('cin').addEventListener('input',function(){
+  try{this.style.height='auto';this.style.height=Math.min(this.scrollHeight,90)+'px';}catch(e){}
+});
 async function sendChat(){const i=document.getElementById('cin');const m=i.value.trim();if(!m)return;i.value='';i.style.height='auto';addB('user',m);await askCoach(m);}
 function sq(m){goTo('coach');addB('user',m);askCoach(m);}
 async function autoGreet(){await askCoach(`Hoi! Ik ben ${P.name}, doel: ${P.goal}. ${P.cycling==='ja'?'Ik fiets ook.':''} Geef een korte welkomstbegroeting.`);}
@@ -1158,11 +1284,25 @@ document.getElementById('reset-btn').addEventListener('click',()=>{
 
 // ═══ API ═══
 async function callAI(messages,maxTokens=600,system=null){
+  if(!P?.apiKey)throw new Error('Geen API key ingesteld. Ga naar Profiel.');
   const body={model:'claude-sonnet-4-20250514',max_tokens:maxTokens,messages};
   if(system)body.system=system;
-  const r=await fetch('https://runcoach-proxy.johandouma.workers.dev',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':P.apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify(body)});
-  if(!r.ok){const t=await r.json();throw new Error(t?.error?.message||r.status);}
-  return(await r.json()).content[0].text;
+  const proxy='https://runcoach-proxy.johandouma.workers.dev';
+  let r;
+  try{
+    r=await fetch(proxy,{method:'POST',headers:{'Content-Type':'application/json','x-api-key':P.apiKey,'anthropic-version':'2023-06-01'},body:JSON.stringify(body)});
+  }catch(err){
+    throw new Error('Geen verbinding met proxy. Check je internet. ('+err.message+')');
+  }
+  if(!r.ok){
+    let msg=r.status;
+    try{const t=await r.json();msg=t?.error?.message||r.status;}catch(e){}
+    if(r.status===401)throw new Error('Ongeldige API key. Ga naar Profiel en sla je key opnieuw op.');
+    throw new Error('API fout '+msg);
+  }
+  const data=await r.json();
+  if(!data.content||!data.content[0])throw new Error('Leeg antwoord van API');
+  return data.content[0].text;
 }
 
 init();
